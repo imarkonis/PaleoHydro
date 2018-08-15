@@ -2,7 +2,9 @@
 
 ## Investigation of preconditions of major drought events
 
-Run init.R to create directory structure. Directories data, results are not included in the repo as well as file source/paths.R.
+Run init.R to create directory structure and prepare data for analysis. Directories data, results are not included in the repo as well as file source/paths.R.
+
+Then scripts get_events.R and preconditions.R.
 
 ### Names of variables:
 
