@@ -31,6 +31,6 @@ veg_ids_end <- dta_eve[month == 8, ID]
 veg_dr <- dta_eve[ID %in% veg_ids_start & ID %in% veg_ids_end & dur == 3]
 saveRDS(veg_dr, file = './data/veg_droughts_3_strict.Rds')
 
-
+#Again strictly 3 months of drought during summer, but with total duration 5 months, i.e. drought continues before or after summer
 veg_dr <- dta_eve[ID %in% veg_ids_start & ID %in% veg_ids_end & dur == 5]
 saveRDS(veg_dr, file = './data/veg_droughts_5_strict.Rds')
