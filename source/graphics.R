@@ -6,6 +6,21 @@ theme_opts <- list(theme(axis.ticks.length=unit(-0.1, "cm"),
 
 var_cols <- c("#32384D", "#D13525",  "#F2C057",  "#217CA3","#426E86")
 
+plot_events_time <- function(dt){
+  ggplot(dt, aes(x = yr, y = area)) + 
+  geom_point(size = 2) + 
+  geom_segment(aes(x = yr, 
+                   xend = yr, 
+                   y = 0, 
+                   yend = area)) + 
+  xlab('Time (years)') + 
+  ylab('Number of grid cells') + 
+  theme_bw() +
+  theme_opts + 
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  scale_y_continuous(expand = c(0, 0))} 
+
+
 plot_var_dens <- function(dt){
   ggplot(dt, aes(x = value, fill = variable, group = variable)) +
   geom_density(alpha = 0.8) +
