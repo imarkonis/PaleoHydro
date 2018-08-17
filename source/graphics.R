@@ -17,7 +17,6 @@ plot_events_time <- function(dt){
   ylab('Number of grid cells') + 
   theme_bw() +
   theme_opts + 
-  theme(axis.text.x = element_text(angle = 90, size = 6)) +
   scale_y_continuous(expand = c(0, 0))} 
 
 

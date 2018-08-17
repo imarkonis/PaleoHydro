@@ -1,33 +1,12 @@
-#Explore the preconditions of certain drought events
+#Explore the preconditions of specific drought events
 
 source('./source/libs.R'); source('./source/graphics.R') 
-dta <- readRDS('./data/mstat.Rds')
+dta <- readRDS('./data/mstat_nvars.Rds')
 
 ## veg_dr_3_strict_CEU
-veg_dr <- readRDS(veg_droughts, file = './data/veg_droughts_3_strict.Rds')
-veg_spa_time <- unique(veg_dr[, .(PT_ID, x, y, yr)]) #not taking month in order to merge the whole year
-veg_dr <- merge(veg_spa_time, dta)
-veg_dr[, month := month(DTM)]
+veg_dr <- readRDS(file = './data/veg_droughts_3_strict.Rds')
 
-veg_dr_ceu <- veg_dr[REG == 'CEU', .(PT_ID, yr, month, nP, nP3, nQ, nS, nT)] #nPET has a very sharp density
-plot(melt(table(veg_dr_ceu[, yr])), type = 'l')
-dt_ceu <- melt(data = veg_dr_ceu, id.vars = c('PT_ID', 'yr', 'month')) 
 
-plot_var_dens(dt_ceu)
-ggsave('results/figs/veg_dr_3_strict_CEU.tiff', height = 18, width = 18, units = "cm")
-
-## veg_dr_5_strict_CEU
-veg_dr <- readRDS(veg_droughts, file = './data/veg_droughts_5_strict.Rds')
-veg_spa_time <- unique(veg_dr[, .(PT_ID, x, y, yr)]) 
-veg_dr <- merge(veg_spa_time, dta)
-veg_dr[, month := month(DTM)]
-
-veg_dr_ceu <- veg_dr[REG == 'CEU', .(PT_ID, yr, month, nP, nP3, nQ, nS, nT)] 
-plot(melt(table(veg_dr_ceu[, yr])), type = 'l')
-dt_ceu <- melt(data = veg_dr_ceu, id.vars = c('PT_ID', 'yr', 'month')) 
-
-plot_var_dens(dt_ceu)
-ggsave('results/figs/veg_dr_5_strict_CEU.tiff', height = 18, width = 18, units = "cm")
 
 ## veg_dr_all_strict_CEU
 veg_dr <- readRDS(veg_droughts, file = './data/veg_droughts_all_strict.Rds')
@@ -44,25 +23,26 @@ plot_var_dens(dt_ceu)
 ggsave('results/figs/veg_dr_all_strict_CEU.tiff', height = 18, width = 18, units = "cm")
 
 ## veg_dr_2003_strict_CEU
-veg_dr <- readRDS(veg_droughts, file = './data/veg_droughts_2003_strict.Rds')
+veg_dr <- readRDS(file = './data/veg_droughts_2003_strict.Rds')
 
 veg_spa_time <- unique(veg_dr[, .(PT_ID, x, y, yr)]) 
 veg_dr <- merge(veg_spa_time, dta)
 veg_dr[, month := month(DTM)]
 
-veg_dr_CEU <- veg_dr[REG == 'CEU' & event == 'cur_yr', .(PT_ID, yr, month, nP, nP3, nQ, nS, nT)] #all droughts
+veg_dr_CEU <- veg_dr[REG == 'CEU', .(PT_ID, yr, month, nP, nP3, nQ, nS, nT)] #all droughts
 plot(melt(table(veg_dr_CEU[, yr])), type = 'l') 
 dt_ceu <- melt(data = veg_dr_CEU, id.vars = c('PT_ID', 'yr', 'month')) 
 plot_var_dens(dt_ceu)
 ggsave('results/figs/veg_dr_2003_strict_CEU.tiff', height = 18, width = 18, units = "cm")
 
-veg_dr_CEU <- veg_dr[REG == 'CEU' & yr == '2003' & event == 'cur_yr', .(PT_ID, yr, month, nP, nP3, nQ, nS, nT)] #the 2003 drought; looks realistic
+veg_dr_CEU <- veg_dr[REG == 'CEU' & yr == '2003', .(PT_ID, yr, month, nP, nP3, nQ, nS, nT)] #the 2003 drought; looks realistic
 dt_ceu <- melt(data = veg_dr_CEU, id.vars = c('PT_ID', 'yr', 'month')) 
 plot_var_dens(dt_ceu)
 
 
 
-veg_dr <- readRDS(veg_droughts, file = './data/veg_droughts_2003_strict.Rds') #trying to take previous and next year of each event
+veg_dr <- readRDS(file = './data/veg_droughts_2003_strict.Rds') #trying to take previous and next year of each event
+
 
 veg_spa_time <- unique(veg_dr[, .(PT_ID, x, y, yr)]) #not taking month in order to merge the whole year
 veg_spa_time_pr <- veg_spa_time_aft <- veg_spa_time
@@ -96,6 +76,20 @@ ggplot(dt_ceu, aes(x = value, fill = variable, group = variable)) +
   theme(strip.background = element_rect(fill = var_cols[1])) +
   theme(strip.text = element_text(colour = 'white')) + 
   theme_opts
+
+
+
+veg_spa_time <- unique(veg_dr[, .(PT_ID, x, y, yr)]) #not taking month in order to merge the whole year
+veg_dr <- merge(veg_spa_time, dta)
+veg_dr[, month := month(DTM)]
+
+veg_dr_CEU <- veg_dr[REG == 'CEU', .(PT_ID, yr, month, nP, nP3, nQ, nS, nT)] #nPET has a very sharp density
+plot(melt(table(veg_dr_CEU[, yr])), type = 'l')
+dt_ceu <- melt(data = veg_dr_CEU, id.vars = c('PT_ID', 'yr', 'month')) 
+dt_ceu[is.na(value), value := 0]
+
+
+
 
 # MED
 veg_dr_med <- veg_dr[REG == 'MED', .(PT_ID, yr, month, nP, nP3, nQ, nS, nT)]
