@@ -1,6 +1,6 @@
 #Detect and classify the events
 
-source('./source/libs.R'); source('./source/graphics.R')
+source('./source/functions.R'); source('./source/graphics.R')
 dta <- readRDS('./data/mstat_nvars.Rds')
 
 dta_CEU <- dta[REG == 'CEU']

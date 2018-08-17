@@ -3,7 +3,7 @@
 #Folder structure
  dir.create("./data"); dir.create("./results"); dir.create("./results/figs") #results and data folders are ignored due to size (.gitignore)
 
-source('./source/libs.R') 
+source('./source/functions.R') 
  
 #Data preparation
 dta <- readRDS('./data/mstat_rQ20_rs_len0_rs_1.Rds') #main analysis dataset

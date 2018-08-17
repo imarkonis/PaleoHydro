@@ -1,4 +1,4 @@
-source('./source/libs.R')
+source('./source/functions.R')
 
 theme_opts <- list(theme(axis.ticks.length=unit(-0.1, "cm"),  
                          axis.text.x = element_text(margin=unit(c(0.2,0.2,0.2,0.2), "cm")), 
