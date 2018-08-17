@@ -18,7 +18,7 @@ dta[!is.na(ID), dur := .N, ID] # and their duration in months
 
 saveRDS(dta, './data/mstat_all.Rds') #dataset used in further analysis
 
-dta_nvars <- dta[, .(EVE, yr, month, abs_month, PT_ID, x, y, ID, nP, nP3, nQ, nS, nT)] 
+dta_nvars <- dta[, .(EVE, REG, yr, month, abs_month, PT_ID, x, y, ID, dur, nP, nP3, nQ, nS, nT)] 
 saveRDS(dta_nvars, './data/mstat_nvars.Rds') #dataset with normalised values [to work with a smaller data table]
 
 

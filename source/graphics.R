@@ -6,15 +6,6 @@ theme_opts <- list(theme(axis.ticks.length=unit(-0.1, "cm"),
 
 var_cols <- c("#32384D", "#D13525",  "#F2C057",  "#217CA3","#426E86")
 
-veg_spa_time <- unique(veg_dr[, .(PT_ID, x, y, yr)]) #not taking month in order to merge the whole year
-veg_dr <- merge(veg_spa_time, dta)
-veg_dr[, month := month(DTM)]
-
-veg_dr_CEU <- veg_dr[REG == 'CEU', .(PT_ID, yr, month, nP, nP3, nQ, nS, nT)] #nPET has a very sharp density
-plot(melt(table(veg_dr_CEU[, yr])), type = 'l')
-dt_ceu <- melt(data = veg_dr_CEU, id.vars = c('PT_ID', 'yr', 'month')) 
-dt_ceu[is.na(value), value := 0]
-
 plot_var_dens <- function(dt){
   ggplot(dt, aes(x = value, fill = variable, group = variable)) +
   geom_density(alpha = 0.8) +
