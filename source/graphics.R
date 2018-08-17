@@ -19,8 +19,7 @@ plot_events_time <- function(dt){
   theme_opts + 
   scale_y_continuous(expand = c(0, 0))} 
 
-
-plot_var_dens <- function(dt){
+plot_var_dens_yr <- function(dt){
   ggplot(dt, aes(x = value, fill = variable, group = variable)) +
   geom_density(alpha = 0.8) +
   geom_vline(xintercept = 0, linetype = "dashed", size = 0.3, col = var_cols[1]) + 
@@ -32,3 +31,31 @@ plot_var_dens <- function(dt){
   theme(strip.text = element_text(colour = 'white')) + 
   theme_opts
 }
+
+plot_var_dens_prv <- function(dt){
+  ggplot(dt, aes(x = value, fill = variable, group = variable)) +
+    geom_density(alpha = 0.8) +
+    geom_vline(xintercept = 0, linetype = "dashed", size = 0.3, col = var_cols[1]) + 
+    xlim(-3, 3) +
+    scale_fill_manual(values = var_cols[c(1, 5, 4, 3, 2)]) +
+    facet_wrap(vars(time)) +
+    theme_bw() + 
+    theme(strip.background = element_rect(fill = var_cols[1])) +
+    theme(strip.text = element_text(colour = 'white')) + 
+    theme_opts
+}
+
+plot_var_dens_nxt <- function(dt){
+  dt[, time_f := (paste0('+', as.character(time)))]
+  ggplot(dt, aes(x = value, fill = variable, group = variable)) +
+    geom_density(alpha = 0.8) +
+    geom_vline(xintercept = 0, linetype = "dashed", size = 0.3, col = var_cols[1]) + 
+    xlim(-3, 3) +
+    scale_fill_manual(values = var_cols[c(1, 5, 4, 3, 2)]) +
+    facet_wrap(vars(time_f)) +
+    theme_bw() + 
+    theme(strip.background = element_rect(fill = var_cols[1])) +
+    theme(strip.text = element_text(colour = 'white')) + 
+    theme_opts
+}
+

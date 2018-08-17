@@ -10,18 +10,21 @@ dta <- readRDS('./data/mstat_rQ20_rs_len0_rs_1.Rds') #main analysis dataset
 
 dta[, yr := yr]
 dta[, month := month(DTM)]
-dta[, abs_month := .GRP, DTM]
+dta[, time := .GRP, DTM] #absolute time units
 dta[, PT_ID := .GRP, .(x, y)] #id for each grid cell
 
-table(dta[EVE == T]$yr) # EID seems not to be specific for each grid box; but they are continuous in time
-dta[EVE == T, ID := .GRP, .(x, y, EID)] # In this way we have event IDs for each grid box
-dta[!is.na(ID), dur := .N, ID] # and their duration in months
+table(dta[EVE == T]$yr) #EID seems not to be specific for each grid box; but they are continuous in time
+dta[EVE == T, ID := .GRP, .(x, y, EID)] #in this way we have event IDs for each grid box
+dta[EVE == T, start := min(time, na.rm = T), ID] 
+dta[EVE == T, start_month := month(min(DTM, na.rm = T)), ID] 
+dta[!is.na(ID), dur := .N, ID] #and their duration in months 
+setorder(dta, PT_ID)
 
 saveRDS(dta, './data/mstat_all.Rds') #dataset used in further analysis
 
-dta_nvars <- dta[, .(EVE, REG, DTM, yr, month, abs_month, PT_ID, x, y, ID, dur, nP, nP3, nQ, nS, nT, nPET)] 
+dta_nvars <- dta[, .(EVE, REG, DTM, yr, month, time, PT_ID, x, y, ID, start, start_month, dur, nP, nP3, nQ, nS, nT, nPET)] 
 saveRDS(dta_nvars, './data/mstat_nvars.Rds') #dataset with normalised values [to work with a smaller data table]
-rm(dta, dta_nvars);
+rm(dta, dta_nvars)
 
 ## Examples
 

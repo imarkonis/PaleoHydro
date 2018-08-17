@@ -1,13 +1,23 @@
 library(data.table); library(ggplot2)
 
-put_prev_aft_yr <- function(drought, dataset = dta){
-  veg_spa_time <- unique(drought[, .(PT_ID, x, y, yr)]) 
-  veg_spa_time_pr <- veg_spa_time_aft <- veg_spa_time
-  veg_spa_time$event = factor('cur_yr')
-  veg_spa_time_pr$event = factor('pr_yr')
-  veg_spa_time_pr[, yr := yr - 1] 
-  veg_spa_time_aft$event = factor('aft_yr')
-  veg_spa_time_aft[, yr := yr + 1] 
-  veg_spa_time <- rbind(veg_spa_time, veg_spa_time_pr, veg_spa_time_aft)
-  veg_dr <- merge(veg_spa_time, dataset)
+add_prv_yr <- function(drought, dataset = dta){
+  aa <- unique(drought[, .(PT_ID, yr)]) 
+  aa_prv <- aa
+  aa$event = factor('cur_yr')
+  aa_prv$event = factor('prv_yr')
+  aa_prv[, yr := yr - 1] 
+  aa <- rbind(aa, aa_prv)
+  out <- merge(aa, dataset)
+  return(out)
+}
+
+add_nxt_yr <- function(drought, dataset = dta){
+  aa <- unique(drought[, .(PT_ID, yr)]) 
+  aa_nxt <- aa
+  aa$event = factor('cur_yr')
+  aa_nxt$event = factor('nxt_yr')
+  aa_nxt[, yr := yr + 1] 
+  aa <- rbind(aa, aa_nxt)
+  out <- merge(aa, dataset)
+  return(out)
 }
