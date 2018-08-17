@@ -10,7 +10,7 @@ dta_MED <- dta[REG == 'MED']
 veg_ids_start <- dta_CEU[month == 6, ID]
 veg_ids_end <- dta_CEU[month == 8, ID]
 veg_dr <- dta_CEU[ID %in% veg_ids_start & ID %in% veg_ids_end & dur == 3]
-veg_dr_yr <- dta_CEU[PT_ID %in% veg_dr$PT_ID & yr %in% veg_dr$yr] #adding the rest of the year for each event
+veg_dr_yr <- merge(unique(veg_dr[, .(PT_ID, yr)]), dta) #adding the rest of the year for each event
 
 to_plot <- unique(veg_dr[, .(PT_ID, yr)]) #investigation of temporal evolution
 to_plot[, area := .N, yr]  
@@ -18,7 +18,7 @@ plot_events_time(to_plot)
 
 to_plot <- veg_dr_yr[, .(PT_ID, DTM, yr, month, nP, nP3, nQ, nS, nT)] #nPET has a very sharp density and was not looking good in denstity plots
 to_plot <- melt(data = to_plot, id.vars = c('PT_ID', 'yr', 'month', 'DTM')) 
-plot_var_dens(to_plot)
+plot_var_dens(to_plot) #looks realistic
 
 ggsave('results/figs/veg_dr_3_strict_CEU.tiff', height = 18, width = 18, units = "cm")
 saveRDS(veg_dr, file = './data/veg_droughts_3_strict.Rds')
@@ -36,19 +36,19 @@ ggplot(dta[REG == 'CEU' & yr == 2003 & EVE == T, .(month)], aes(x = factor(month
   theme_bw() +
   theme_opts
 
-#Again strictly 3 months of drought during summer, but with total duration between 3 to 8 months, i.e., drought continues before or after summer
-veg_dr <- dta_CEU[ID %in% veg_ids_start & ID %in% veg_ids_end & dur >= 3 & dur <= 8]
+#Again strictly 3 months of drought during summer, but with total duration between 3 to 9 months, i.e., similar to 2013 drought
+veg_dr <- dta_CEU[ID %in% veg_ids_start & ID %in% veg_ids_end & dur >= 3 & dur <= 9]
 veg_dr_yr <- dta_CEU[PT_ID %in% veg_dr$PT_ID & yr %in% veg_dr$yr] 
 
 to_plot <- unique(veg_dr[, .(PT_ID, yr)]) #investigation of temporal evolution
 to_plot[, area := .N, yr]  
 plot_events_time(to_plot)
 
-to_plot <- veg_dr_yr[, .(PT_ID, yr, month, nP, nP3, nQ, nS, nT)] #nPET has a very sharp density and was not looking good in denstity plots
+to_plot <- veg_dr_yr[, .(PT_ID, yr, month, nP, nP3, nQ, nS, nT)] 
 to_plot <- melt(data = to_plot, id.vars = c('PT_ID', 'yr', 'month')) 
-plot_var_dens(to_plot)
+plot_var_dens(to_plot) #no clear signal
 
-saveRDS(veg_dr, file = './data/veg_droughts_5_strict.Rds')
+saveRDS(veg_dr, file = './data/veg_droughts_2003_strict.Rds')
 
 #The 100 most persisting droughts in all grid cells per region
 top_100_ids_CEU <- head(unique(dta_CEU[order(-dur), .(ID, dur)]), 100)
