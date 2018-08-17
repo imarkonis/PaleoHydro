@@ -8,6 +8,7 @@ source('./source/libs.R')
 #Data preparation
 dta <- readRDS('./data/mstat_rQ20_rs_len0_rs_1.Rds') #main analysis dataset
 
+dta[, yr := factor(yr)]
 dta[, month := factor(month(DTM))]
 dta[, abs_month := .GRP, DTM]
 dta[, PT_ID := .GRP, .(x, y)] #id for each grid cell
@@ -18,9 +19,9 @@ dta[!is.na(ID), dur := .N, ID] # and their duration in months
 
 saveRDS(dta, './data/mstat_all.Rds') #dataset used in further analysis
 
-dta_nvars <- dta[, .(EVE, REG, yr, month, abs_month, PT_ID, x, y, ID, dur, nP, nP3, nQ, nS, nT, nPET)] 
+dta_nvars <- dta[, .(EVE, REG, DTM, yr, month, abs_month, PT_ID, x, y, ID, dur, nP, nP3, nQ, nS, nT, nPET)] 
 saveRDS(dta_nvars, './data/mstat_nvars.Rds') #dataset with normalised values [to work with a smaller data table]
-rm(dta, dta_nvars); gc()
+rm(dta, dta_nvars);
 
 ## Examples
 
