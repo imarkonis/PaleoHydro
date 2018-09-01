@@ -55,7 +55,6 @@ cumsum_events_space <- function(dataset, var, event_start, pre_dur, event_dur, a
   return(out)
 } 
 
-
 add_prv_yr <- function(drought, dataset = dta){
   aa <- unique(drought[, .(PT_ID, yr)]) 
   aa_prv <- aa
