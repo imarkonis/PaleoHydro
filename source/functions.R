@@ -1,4 +1,60 @@
-library(data.table); library(ggplot2)
+library(data.table); library(ggplot2); library(lubridate); library(zoo)
+
+get_anomaly <- function(dataset, var, event_start, mwin, duration){  #mwin in years!
+  dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right')]
+  event_pr_mean <- dataset[DTM == event_start, roll_mean]
+  out <- dataset[as.Date(DTM) >= event_start & as.Date(DTM) < event_start  %m+% months(duration), .(DTM, anomaly = eval(parse(text = var)) - event_pr_mean)]  #perhaps consider monthly means as well
+  return(out)
+} # Calculates the difference between a *var* and its average in the previous *mwin* years for each value of the next *duration* months
+
+get_anomaly_events <- function(dataset, var, event_start, mwin, duration){  #mwin in years!
+  dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right')]
+  event_pr_mean <- dataset[DTM %in% event_start, roll_mean]
+  out <- list()
+  for(i in 1:length(event_pr_mean)){
+  out[[i]] <- dataset[as.Date(DTM) >= event_start[i] & as.Date(DTM) < event_start[i] %m+% months(duration[i]), 
+                 .(DTM, anomaly = eval(parse(text = var)) - event_pr_mean[i])]
+  }
+  names(out) <- year(event_start)
+  out <- data.table(melt(out, id.vars = c('DTM', 'anomaly'),  varnames = 'event'))
+  colnames(out)[3] <- 'event'
+  out[, event := as.numeric(event)]
+  return(out)
+} 
+
+cumsum_events <- function(dataset, var, event_start, pre_dur, event_dur, aft_dur, mwin = 30){  #mwin in years!
+  dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right')]
+  event_pr_mean <- dataset[DTM %in% event_start, roll_mean]
+  out <- list()
+  for(i in 1:length(event_pr_mean)){
+    out[[i]] <- dataset[as.Date(DTM) >= (event_start[i] - months(pre_dur)) & 
+                          as.Date(DTM) <= (event_start[i] + months(event_dur[i] + aft_dur)), 
+                        .(DTM, anomaly = eval(parse(text = var)) - event_pr_mean[i])]
+  }
+  names(out) <- year(event_start)
+  out <- data.table(melt(out, id.vars = c('DTM', 'anomaly'),  varnames = 'event'))
+  colnames(out)[3] <- 'event'
+  out[, event := as.numeric(event) + floor(pre_dur / 12)]
+  return(out)
+} 
+
+##TODO
+cumsum_events_space <- function(dataset, var, event_start, pre_dur, event_dur, aft_dur, mwin = 30){  #mwin in years!
+  dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right'), .(x, y)]
+  event_pr_mean <- dataset[DTM %in% event_start]
+  out <- list()
+  for(i in 1:length(event_pr_mean)){
+    out[[i]] <- dataset[as.Date(DTM) >= (event_start[i] - months(pre_dur)) & 
+                          as.Date(DTM) <= (event_start[i] + months(event_dur[i] + aft_dur)), 
+                        .(DTM, anomaly = eval(parse(text = var)) - event_pr_mean[i]), .(x, y)]
+  }
+  names(out) <- year(event_start)
+  out <- data.table(melt(out, id.vars = c('DTM', 'anomaly', 'x', 'y'),  varnames = 'event'))
+  colnames(out)[3] <- 'event'
+  out[, event := as.numeric(event) + floor(pre_dur / 12)]
+  return(out)
+} 
+
 
 add_prv_yr <- function(drought, dataset = dta){
   aa <- unique(drought[, .(PT_ID, yr)]) 

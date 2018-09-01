@@ -8,7 +8,7 @@ source('./source/functions.R')
 #Data preparation
 dta <- readRDS('./data/mstat_rQ20_rs_len0_rs_1.Rds') #main analysis dataset
 
-dta[, yr := yr]
+dta[, yr := year(DTM)]
 dta[, month := month(DTM)]
 dta[, time := .GRP, DTM] #absolute time units
 dta[, PT_ID := .GRP, .(x, y)] #id for each grid cell
