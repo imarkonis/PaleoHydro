@@ -4,7 +4,6 @@ source('./source/functions.R'); source('./source/graphics.R')
 dta <- readRDS('./data/mstat_all.Rds')
 ma_ave <- 30 # time period for the estimation of mean (years)
 
-
 test <- dta[x == 50 & y == 20, ] #CR or close
 tp <- as.Date("2010-12-01")
 dur <- 5 * 12 #duration for the estimation of the cumulative sum of the given variables (months)
@@ -128,15 +127,16 @@ ggplot(test_anom, aes(x = DTM, y = cumsum, col = var)) +
 
 ####
 test <- dta[x > 50 & x < 55 & y > 20 & y < 25,] #working with more points
-test[, nPET := scale(aPET)]
-test[, nP := scale(aP)] 
-test[, nQ := scale(aQ)]
-test[, nS := scale(aS)]
+test[, nPET := scale(aPET), PT_ID]
+test[, nP := scale(aP), PT_ID] 
+test[, nQ := scale(aQ), PT_ID]
+test[, nS := scale(aS), PT_ID]
 
-pre <- 12
-aft <- 12
+pre <- 6
+aft <- 3
+my_event <- 2012
 
-events <- unique( test[dur > 9, .(as.Date(min(DTM)), dur), ID])
+events <- unique( test[dur >= 12, .(as.Date(min(DTM)), dur), ID])
 events[, yr := year(V1)]
 colnames(events)[2] <- 'start'
 
@@ -146,21 +146,26 @@ test_anom <- rbind( #investigating the preconditions of the events
   cbind(cumsum_events_space(test, 'nQ', events$start, pre, events$dur, aft), var = 'nQ'),
   cbind(cumsum_events_space(test, 'nS', events$start, pre, events$dur, aft), var = 'nS')) 
 
-test_anom[, cumsum := cumsum(anomaly), .(var, event)]
+test_anom[, cumsum := cumsum(anomaly), .(var, event, PT_ID)]
 test_anom[, month := factor(month(DTM))]
 test_anom[, year := factor(year(DTM))]
 
-def_vols <- melt(test[, .(DTM, p, q, s)], id.vars = 'DTM')
+#test_anom <- test_anom[event == my_event]
+
+test_anom_m <- test_anom[, .(median(cumsum), .N), .(var, DTM, event)]
+colnames(test_anom_m)[4] <- 'cumsum'
+test_anom_m <- test_anom_m[complete.cases(test_anom_m)]
+def_vols <- melt(test[, .(DTM, PT_ID, p, q, s)], id.vars = c('DTM', 'PT_ID'))
 def_vols <- def_vols[complete.cases(def_vols)]
-def_vols <- merge(test_anom[, .(DTM, event)], def_vols, by = 'DTM')
+def_vols <- merge(test_anom[, .(DTM, PT_ID, event)], def_vols, by = c('DTM', 'PT_ID'))
 rects <- data.frame(DTM = events$start, 
                     DTM_end = events$start + months(events$dur))
 rects <- unique(merge(rects, test_anom[, .(DTM, event)], by = 'DTM'))
-ggplot(test_anom, aes(x = DTM, y = cumsum, col = var)) +
+ggplot(test_anom_m, aes(x = DTM, y = cumsum, col = var)) +
   geom_rect(data = rects, aes(xmin = DTM, xmax = DTM_end, ymin = -Inf, ymax = Inf), 
             alpha = 0.3, fill = "grey70", col= "grey70", inherit.aes = F) +
-  geom_bar(data = def_vols, aes(x = DTM, y = value, fill = variable), col = 'black',
-           position = "dodge", stat = 'identity',  inherit.aes = F, alpha = 0.3) + 
+  #geom_bar(data = def_vols, aes(x = DTM, y = value, fill = variable), col = 'black',
+  #         position = "dodge", stat = 'identity',  inherit.aes = F, alpha = 0.3) + 
   geom_point() + 
   geom_line() +
   geom_hline(yintercept = 0, linetype = 2) + 

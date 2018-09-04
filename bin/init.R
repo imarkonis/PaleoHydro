@@ -15,7 +15,8 @@ dta[, PT_ID := .GRP, .(x, y)] #id for each grid cell
 
 table(dta[EVE == T]$yr) #EID seems not to be specific for each grid box; but they are continuous in time
 dta[EVE == T, ID := .GRP, .(x, y, EID)] #in this way we have event IDs for each grid box
-dta[EVE == T, start := min(time, na.rm = T), ID] 
+dta[EVE == T, start := min(DTM, na.rm = T), ID] 
+dta[EVE == T, start_abs := min(time, na.rm = T), ID] 
 dta[EVE == T, start_month := month(min(DTM, na.rm = T)), ID] 
 dta[!is.na(ID), dur := .N, ID] #and their duration in months 
 setorder(dta, PT_ID)

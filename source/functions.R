@@ -38,20 +38,19 @@ cumsum_events <- function(dataset, var, event_start, pre_dur, event_dur, aft_dur
   return(out)
 } 
 
-##TODO
-cumsum_events_space <- function(dataset, var, event_start, pre_dur, event_dur, aft_dur, mwin = 30){  #mwin in years!
-  dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right'), .(x, y)]
-  event_pr_mean <- dataset[DTM %in% event_start]
+cumsum_events_space <- function(dataset, var, events_dt, pre_dur, aft_dur, mwin = 30){  #mwin in years!
+  dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right'), PT_ID]
+  event_pr_mean <- dataset[DTM == start, roll_mean, .(PT_ID, DTM)]
+  event_pr_mean <- event_pr_mean[complete.cases(event_pr_mean)]
   out <- list()
-  for(i in 1:length(event_pr_mean)){
-    out[[i]] <- dataset[as.Date(DTM) >= (event_start[i] - months(pre_dur)) & 
-                          as.Date(DTM) <= (event_start[i] + months(event_dur[i] + aft_dur)), 
-                        .(DTM, anomaly = eval(parse(text = var)) - event_pr_mean[i]), .(x, y)]
+  for(i in 1:length(events_dt$PT_ID)){
+    out[[i]] <- dataset[PT_ID == events_dt$PT_ID[i] & as.Date(DTM) >= as.Date(events_dt$start[i]) - months(pre_dur) & 
+                          as.Date(DTM) <= as.Date(events_dt$start[i]) + months(events_dt$dur[i] + aft_dur), 
+                        .(DTM, anomaly = eval(parse(text = var)) - event_pr_mean[i]$roll_mean)]
   }
-  names(out) <- year(event_start)
-  out <- data.table(melt(out, id.vars = c('DTM', 'anomaly', 'x', 'y'),  varnames = 'event'))
-  colnames(out)[3] <- 'event'
-  out[, event := as.numeric(event) + floor(pre_dur / 12)]
+  names(out) <- events_dt$PT_ID
+  out <- data.table(melt(out, id.vars = c('DTM', 'anomaly'),  varnames = 'event'))
+  colnames(out)[3] <- 'PT_ID'
   return(out)
 } 
 
