@@ -46,11 +46,11 @@ cumsum_events_space <- function(dataset, var, events_dt, pre_dur, aft_dur, mwin 
   for(i in 1:length(events_dt$PT_ID)){
     out[[i]] <- dataset[PT_ID == events_dt$PT_ID[i] & as.Date(DTM) >= as.Date(events_dt$start[i]) - months(pre_dur) & 
                           as.Date(DTM) <= as.Date(events_dt$start[i]) + months(events_dt$dur[i] + aft_dur), 
-                        .(DTM, anomaly = eval(parse(text = var)) - event_pr_mean[i]$roll_mean)]
+                        .(DTM, anomaly = eval(parse(text = var)) - event_pr_mean[i]$roll_mean, event = floor(median(yr)))]
   }
   names(out) <- events_dt$PT_ID
-  out <- data.table(melt(out, id.vars = c('DTM', 'anomaly'),  varnames = 'event'))
-  colnames(out)[3] <- 'PT_ID'
+  out <- data.table(melt(out, id.vars = c('DTM', 'anomaly', 'event')))
+  colnames(out)[4] <- 'PT_ID'
   return(out)
 } 
 

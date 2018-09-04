@@ -126,7 +126,7 @@ ggplot(test_anom, aes(x = DTM, y = cumsum, col = var)) +
   theme_opts
 
 ####
-test <- dta[x > 50 & x < 55 & y > 20 & y < 25,] #working with more points
+test <- dta[x > 40 & x < 55 & y > 15 & y < 25,] #working with more points
 test[, nPET := scale(aPET), PT_ID]
 test[, nP := scale(aP), PT_ID] 
 test[, nQ := scale(aQ), PT_ID]
@@ -134,19 +134,18 @@ test[, nS := scale(aS), PT_ID]
 
 pre <- 6
 aft <- 3
-my_event <- 2012
+my_events <- c(1921, 1976, 2003, 2012)
 
-events <- unique( test[dur >= 12, .(as.Date(min(DTM)), dur), ID])
-events[, yr := year(V1)]
+events <- unique( test[dur >= 6 & yr %in% my_events, .(as.Date(min(DTM)), yr, dur, PT_ID), ID])
 colnames(events)[2] <- 'start'
 
 test_anom <- rbind( #investigating the preconditions of the events
-  cbind(cumsum_events_space(test, 'nP', events$start, pre, events$dur, aft), var = 'nP'), 
-  cbind(cumsum_events_space(test, 'nPET', events$start, pre, events$dur, aft), var = 'nPET'),
-  cbind(cumsum_events_space(test, 'nQ', events$start, pre, events$dur, aft), var = 'nQ'),
-  cbind(cumsum_events_space(test, 'nS', events$start, pre, events$dur, aft), var = 'nS')) 
+  cbind(cumsum_events_space(test, 'nP', events, pre, aft), var = 'nP'), 
+  cbind(cumsum_events_space(test, 'nPET', events, pre, aft), var = 'nPET'),
+  cbind(cumsum_events_space(test, 'nQ', events, pre, aft), var = 'nQ'),
+  cbind(cumsum_events_space(test, 'nS', events, pre, aft), var = 'nS')) 
 
-test_anom[, cumsum := cumsum(anomaly), .(var, event, PT_ID)]
+test_anom[, cumsum := cumsum(anomaly), .(var, PT_ID, PT_ID)]
 test_anom[, month := factor(month(DTM))]
 test_anom[, year := factor(year(DTM))]
 
@@ -155,12 +154,14 @@ test_anom[, year := factor(year(DTM))]
 test_anom_m <- test_anom[, .(median(cumsum), .N), .(var, DTM, event)]
 colnames(test_anom_m)[4] <- 'cumsum'
 test_anom_m <- test_anom_m[complete.cases(test_anom_m)]
+test_anom_m <- test_anom_m[N >= 30]
+
 def_vols <- melt(test[, .(DTM, PT_ID, p, q, s)], id.vars = c('DTM', 'PT_ID'))
 def_vols <- def_vols[complete.cases(def_vols)]
 def_vols <- merge(test_anom[, .(DTM, PT_ID, event)], def_vols, by = c('DTM', 'PT_ID'))
 rects <- data.frame(DTM = events$start, 
                     DTM_end = events$start + months(events$dur))
-rects <- unique(merge(rects, test_anom[, .(DTM, event)], by = 'DTM'))
+rects <- unique(merge(rects, test_anom_m[, .(DTM, event)], by = 'DTM'))
 ggplot(test_anom_m, aes(x = DTM, y = cumsum, col = var)) +
   geom_rect(data = rects, aes(xmin = DTM, xmax = DTM_end, ymin = -Inf, ymax = Inf), 
             alpha = 0.3, fill = "grey70", col= "grey70", inherit.aes = F) +
