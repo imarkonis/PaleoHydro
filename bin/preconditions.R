@@ -126,18 +126,29 @@ ggplot(test_anom, aes(x = DTM, y = cumsum, col = var)) +
   theme_opts
 
 ####
-test <- dta[x > 40 & x < 55 & y > 15 & y < 25,] #working with more points
+test <- dta[REG == 'CEU'] #working with more points
+test <- dta[x %in% 40:55 & y %in% 15:25,] #working with events
 test[, nPET := scale(aPET), PT_ID]
 test[, nP := scale(aP), PT_ID] 
 test[, nQ := scale(aQ), PT_ID]
 test[, nS := scale(aS), PT_ID]
 
-pre <- 6
-aft <- 3
+pre <- 12
+aft <- 12
 my_events <- c(1921, 1976, 2003, 2012)
+grid_cell_thres <- 20
 
 events <- unique( test[dur >= 6 & yr %in% my_events, .(as.Date(min(DTM)), yr, dur, PT_ID), ID])
 colnames(events)[2] <- 'start'
+events[, end := start + months(dur)]
+
+no_events_start <- events[, .N, start]
+no_events_end <- events[, .N, end]
+setorder(no_events_start, start)
+setorder(no_events_end, end)
+
+events <- events[start %in% no_events_start[N > grid_cell_thres]$start]
+events <- events[end %in% no_events_end[N > grid_cell_thres]$end]
 
 test_anom <- rbind( #investigating the preconditions of the events
   cbind(cumsum_events_space(test, 'nP', events, pre, aft), var = 'nP'), 
@@ -154,7 +165,7 @@ test_anom[, year := factor(year(DTM))]
 test_anom_m <- test_anom[, .(median(cumsum), .N), .(var, DTM, event)]
 colnames(test_anom_m)[4] <- 'cumsum'
 test_anom_m <- test_anom_m[complete.cases(test_anom_m)]
-test_anom_m <- test_anom_m[N >= 30]
+test_anom_m <- test_anom_m[N >= grid_cell_thres]
 
 def_vols <- melt(test[, .(DTM, PT_ID, p, q, s)], id.vars = c('DTM', 'PT_ID'))
 def_vols <- def_vols[complete.cases(def_vols)]
@@ -162,9 +173,9 @@ def_vols <- merge(test_anom[, .(DTM, PT_ID, event)], def_vols, by = c('DTM', 'PT
 rects <- data.frame(DTM = events$start, 
                     DTM_end = events$start + months(events$dur))
 rects <- unique(merge(rects, test_anom_m[, .(DTM, event)], by = 'DTM'))
-ggplot(test_anom_m, aes(x = DTM, y = cumsum, col = var)) +
+ggplot(test_anom_m, aes(x = as.Date(DTM), y = cumsum, col = var)) +
   geom_rect(data = rects, aes(xmin = DTM, xmax = DTM_end, ymin = -Inf, ymax = Inf), 
-            alpha = 0.3, fill = "grey70", col= "grey70", inherit.aes = F) +
+            alpha = 0.05, fill = 'grey50', inherit.aes = F) +
   #geom_bar(data = def_vols, aes(x = DTM, y = value, fill = variable), col = 'black',
   #         position = "dodge", stat = 'identity',  inherit.aes = F, alpha = 0.3) + 
   geom_point() + 
@@ -175,6 +186,8 @@ ggplot(test_anom_m, aes(x = DTM, y = cumsum, col = var)) +
   facet_wrap(vars(event), scales = 'free_x') +
   xlab(label = "Time (months)") +
   ylab(label = 'Cumulative sum') + 
+  scale_x_date(breaks = date_breaks("3 months"), 
+               labels = date_format("%b")) +
   theme_bw() +
   theme(strip.background = element_rect(fill = var_cols[1])) +
   theme(strip.text = element_text(colour = 'white')) + 
