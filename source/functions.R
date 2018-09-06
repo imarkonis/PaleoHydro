@@ -1,4 +1,5 @@
-library(data.table); library(ggplot2); library(lubridate); library(zoo)
+library(data.table); library(ggplot2); library(lubridate); library(zoo); library(scales) 
+library(doSNOW)
 
 get_anomaly <- function(dataset, var, event_start, mwin, duration){  #mwin in years!
   dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right')]
