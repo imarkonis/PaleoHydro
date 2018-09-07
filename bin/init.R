@@ -8,7 +8,6 @@ source('./source/functions.R')
 #Data preparation
 dta <- readRDS('./data/raw/mstat_rQ20_rs_len0_met_001.Rds') #main analysis dataset
 
-
 dta[, yr := year(DTM)]
 dta[, month := month(DTM)]
 dta[, PT_ID := .GRP, .(x, y)] #id for each grid cell
@@ -27,6 +26,15 @@ dta[!is.na(q), start_q := min(DTM, na.rm = T), ID]
 setorder(dta, PT_ID)
 saveRDS(dta, './data/mstat_all_met1.Rds') #dataset used in further analysis
 
+dtb <- readRDS('./data/raw/rs_met_001.rds')
+colnames(dtb)[1:2] = c('x', 'y')
+dtb_sp <- unique(dtb[, 1:4])
+dta_sp <- unique(dta[, .(x, y, PT_ID)])
+dta_sp <- merge(dta_sp, dtb_sp, by = c('x', 'y'))
+
+saveRDS(dta_sp, file = './data/spatial.Rds') #point IDS, lat/lon and x/y coords
+
+
 events <- dta[!is.na(ID) & !is.na(REG), .(REG, PT_ID, x, y, ID, type, start, start_month, dur, start_s, start_q)]
 events[, start_s := max(start_s, na.rm = T), .(PT_ID, ID)]
 events[, start_q := max(start_q, na.rm = T), .(PT_ID, ID)]
@@ -35,6 +43,7 @@ events[, start_diff := unique(month(start_s)) - unique(month(start_q)), ID]
 
 
 saveRDS(events, './data/events_met1.Rds') #event information
+
 
 
 #dta_nvars <- dta[, .(EVE, REG, DTM, yr, month, time, PT_ID, x, y, ID, start, start_month, dur, nP, nP3, nQ, nS, nT, nPET)] 
