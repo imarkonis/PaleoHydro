@@ -6,58 +6,73 @@
 source('./source/functions.R') 
  
 #Data preparation
-dta <- readRDS('./data/raw/mstat_rQ20_rs_len0_met_001.Rds') #main analysis dataset
+dts <- readRDS('./data/raw/stat_rQ20_rs_len0_met_001.Rds') #main analysis dataset
+dtm <- readRDS('./data/raw/mstat_rQ20_rs_len0_met_001.Rds') #main analysis dataset
 
-dta[, yr := year(DTM)]
-dta[, month := month(DTM)]
-dta[, PT_ID := .GRP, .(x, y)] #id for each grid cell
+e = nc_open('./data/raw/eobs_mask_total2D.nc')
+xc = ncvar_get(e, 'xc')
+yc = ncvar_get(e, 'yc')
+msk = ncvar_get(e, 'mask_pre')
+dimnames(msk) = list(xc = xc, yc = yc)
+msk = data.table(melt(msk))
+setnames(msk, 'value', 'INCLUDE')
+
+dts <- msk[dts, on = c('xc' = 'x', 'yc' = 'y')]
+dtm <- msk[dtm, on = c('xc' = 'x', 'yc' = 'y')]
+
+dts <- dts[INCLUDE == 1]; dts[, INCLUDE := NULL]
+dtm <- dtm[INCLUDE == 1]; dtm[, INCLUDE := NULL]
+
+setnames(dts, c('xc', 'yc'), c('x', 'y'))
+setnames(dtm, c('xc', 'yc'), c('x', 'y'))
+
+dtm[, yr := year(DTM)]
+dtm[, month := month(DTM)]
+dtm[, PT_ID := .GRP, .(x, y)] #id for each grid cell
 
 #events begin when !is.na(p3 | s | q) 
-table(dta[EVE == T]$EID) #EID is not unique for each event - serial number of event at each grid cell (below q20) EID
-dta[EVE == T & EID > 0, ID := .GRP, .(x, y, EID)] #in this way we have event IDs for each grid box
-dta[EVE == T, start := min(DTM, na.rm = T), ID] 
-dta[EVE == T, start_month := month(min(DTM, na.rm = T)), ID] 
-dta[(start_month >= 1 & start_month <= 2) | start_month >= 9, type := factor('cold')]
-dta[(start_month >= 3 & start_month <= 8), type := factor('warm')]
-dta[!is.na(ID), dur := .N, ID] #and their duration in months 
+table(dtm[EVE == T]$EID) #EID is not unique for each event - serial number of event at each grid cell (below q20) EID
+dtm[EVE == T & EID > 0, ID := .GRP, .(x, y, EID)] #in this way we have event IDs for each grid box
+dtm[EVE == T, start := min(DTM, na.rm = T), ID] 
+dtm[EVE == T, start_month := month(min(DTM, na.rm = T)), ID] 
+dtm[(start_month >= 1 & start_month <= 2) | start_month >= 9, type := factor('cold')]
+dtm[(start_month >= 3 & start_month <= 8), type := factor('warm')]
+dtm[!is.na(ID), dur := .N, ID] #and their duration in months 
 
-dta[!is.na(s), start_s := min(DTM, na.rm = T), ID]
-dta[!is.na(q), start_q := min(DTM, na.rm = T), ID]
-setorder(dta, PT_ID)
-saveRDS(dta, './data/mstat_all_met1.Rds') #dataset used in further analysis
+dtm[!is.na(s), start_s := min(DTM, na.rm = T), ID]
+dtm[!is.na(q), start_q := min(DTM, na.rm = T), ID]
+setorder(dtm, PT_ID)
+saveRDS(dtm, './data/mstat_all_met1.Rds') #dataset with all variables that can be used in further analysis
 
 dtb <- readRDS('./data/raw/rs_met_001.rds')
-colnames(dtb)[1:2] = c('x', 'y')
-dtb_sp <- unique(dtb[, 1:4])
-dta_sp <- unique(dta[, .(x, y, PT_ID)])
-dta_sp <- merge(dta_sp, dtb_sp, by = c('x', 'y'))
 
-saveRDS(dta_sp, file = './data/spatial.Rds') #point IDS, lat/lon and x/y coords
+dts_sp <- unique(dts[, 1:4])
+dtm_sp <- unique(dtm[, .(x, y, PT_ID)])
+dtm_sp <- merge(dtm_sp, dts_sp, by = c('x', 'y'))
 
+saveRDS(dtm_sp, file = './data/spatial.Rds') #point IDS, lat/lon and x/y coords
 
-events <- dta[!is.na(ID) & !is.na(REG), .(REG, PT_ID, x, y, ID, type, start, start_month, dur, start_s, start_q)]
+events <- dtm[!is.na(ID) & !is.na(REG), .(REG, PT_ID, x, y, ID, type, start, start_month, dur, start_s, start_q)]
 events[, start_s := max(start_s, na.rm = T), .(PT_ID, ID)]
 events[, start_q := max(start_q, na.rm = T), .(PT_ID, ID)]
 events <- events[!duplicated(events)]
 events[, start_diff := unique(month(start_s)) - unique(month(start_q)), ID]
 
-
 saveRDS(events, './data/events_met1.Rds') #event information
 
-
-
-#dta_nvars <- dta[, .(EVE, REG, DTM, yr, month, time, PT_ID, x, y, ID, start, start_month, dur, nP, nP3, nQ, nS, nT, nPET)] 
-#saveRDS(dta_nvars, './data/mstat_nvars_met1.Rds') #dataset with normalised values [to work with a smaller data table]
-#rm(dta, dta_nvars)
+dtm_short <- dtm[, .(REG, DTM, PT_ID, ID, start, start_month, dur, type, start_s, start_q, 
+                     p = aP, p3 = aP3, q = aQ, s = aS, t = aT, pet = aPET)] 
+saveRDS(dtm_short, './data/mstat_short_met1.Rds') #short version of dtm [for efficiency]
+rm(dtm, dtm_nvars)
 
 ## Examples
 
 #Events happened at grid cell (34, 24) :
-test <- dta[x == 34 & y == 24]
+test <- dtm[x == 34 & y == 24]
 test[, table(ID)]
 
 #The top 30 droughts in terms of duration at this grid cell are:
 test_top_30_ids <- head(unique(test[order(-dur), .(ID, dur)]), 30)
-test_top_30 <- dta[ID %in% test_top_30_ids$ID]
+test_top_30 <- dtm[ID %in% test_top_30_ids$ID]
 
 
