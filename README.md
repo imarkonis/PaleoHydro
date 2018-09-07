@@ -6,7 +6,7 @@ After forking the repo, run init.R to create directory structure and prepare dat
 
 Then run scripts get_events.R, preconditions.R and recovery.R.
 
-### Names of variables:
+### Names of variables in file mstat_rQ20_rs_len0_met_001.Rds:
 
 p, p3, q, s are the deficit volumes for precip, 3-month precip, runoff and soil moisture, 
 
@@ -21,5 +21,6 @@ t* - is the actual threshold
 EVE indicates event
 
 EID is the event ID - specific for each grid box (i.e. EID in the same year can vary over grid boxes)
+EID is not unique for each event - serial number of event at each grid cell (below q20) EID
 
 Event is always when at least one of deficit volumes for p3, q, s is > 0, the period with all p3, q, s = 0 ends the event 

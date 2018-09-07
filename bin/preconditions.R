@@ -1,16 +1,16 @@
 #Explore the preconditions of drought events
 
 source('./source/functions.R'); source('./source/graphics.R') 
-dta <- readRDS('./data/mstat_all_met1.Rds')
+dta <- readRDS('./data/mstat_short_met1.Rds')
 ma_ave <- 30 # time period for the estimation of mean (years)
 
 test <- dta[PT_ID == 493] 
 tp <- as.Date("2015-01-01")
 dur <- 5 * 12 - 1#duration for the estimation of the cumulative sum of the given variables (months)
-test[, nPET := scale(aPET)]
-test[, nP := scale(aP)] #original nP is standardized by month, here are standardized by ts mean
-test[, nQ := scale(aQ)]
-test[, nS := scale(aS)]
+test[, nPET := scale(pet)]
+test[, nP := scale(p)] #original nP is standardized by month, here are standardized by ts mean
+test[, nQ := scale(q)]
+test[, nS := scale(s)]
 
 test_anom <- rbind(
   cbind(get_anomaly(test, 'nP', tp, ma_ave, dur), var = 'nP'),
@@ -35,22 +35,18 @@ ggplot(test_anom[var == 'nS'], aes(x = month, y = anomaly, fill = year)) +
   geom_col(col = 'black', size = 0.75) +
   geom_hline(yintercept = 0) +
   xlab(label = "Month") +
-  ylab(label = 'Cumulative S (z-score)') + 
+  ylab(label = 'Soil moisture (z-score)') + 
   scale_fill_manual(values = var_cols) +
   theme_bw() +
   theme_opts
 
 ####
-test <- dta[PT_ID == 493] #working with events
-test[, nPET := scale(aPET)]
-test[, nP := scale(aP)] 
-test[, nQ := scale(aQ)]
-test[, nS := scale(aS)]
+#working with events
 
 pre <- 12
 aft <- 12
 
-events <- unique( test[dur > 9, .(as.Date(min(DTM)), dur), ID])
+events <- unique( test[dur > 15, .(as.Date(min(DTM)), dur), ID])
 events[, yr := year(V1)]
 colnames(events)[2] <- 'start'
 
@@ -64,7 +60,7 @@ test_anom[, cumsum := cumsum(anomaly), .(var, event)]
 test_anom[, month := factor(month(DTM))]
 test_anom[, year := factor(year(DTM))]
 
-def_vols <- melt(test[, .(DTM, p, q, s)], id.vars = 'DTM')
+def_vols <- melt(test[, .(DTM, p_nV, q_nV, s_nV)], id.vars = 'DTM')
 def_vols <- def_vols[complete.cases(def_vols)]
 def_vols <- merge(test_anom[, .(DTM, event)], def_vols, by = 'DTM')
 rects <- data.frame(DTM = events$start, 
@@ -89,19 +85,22 @@ ggplot(test_anom, aes(x = DTM, y = cumsum, col = var)) +
   theme_opts
 
 ####
-test <- dta[REG == 'NEU'] #working with more points
-test[, nPET := scale(aPET), PT_ID]
-test[, nP := scale(aP), PT_ID] 
-test[, nQ := scale(aQ), PT_ID]
-test[, nS := scale(aS), PT_ID]
+#working with many points
 
 pre <- 12
 aft <- 12
-my_events <- c(1921, 2003, 2012, 2017)
-grid_cell_thres <- 20
+event_dur <- 6
+my_events <- c(1921, 1976, 2003, 2012, 2015, 2017)
+grid_cell_thres <- 10
 
-events <- unique( test[dur >= 6 & yr %in% my_events, .(as.Date(min(DTM)), yr, dur, PT_ID), ID])
-colnames(events)[2] <- 'start'
+test <- dta[REG == 'NEU'] 
+test[, nPET := scale(pet), PT_ID]
+test[, nP := scale(p), PT_ID] 
+test[, nQ := scale(q), PT_ID]
+test[, nS := scale(s), PT_ID]
+test[, yr := as.numeric(year(DTM))]
+
+events <- unique(test[dur >= event_dur & year(start) %in% my_events, .(start, dur, PT_ID), ID])
 events[, end := start + months(dur)]
 
 no_events_start <- events[, .N, start]
@@ -117,29 +116,26 @@ test_anom <- rbind( #investigating the preconditions of the events
   cbind(cumsum_events_space(test, 'nPET', events, pre, aft), var = 'nPET'),
   cbind(cumsum_events_space(test, 'nQ', events, pre, aft), var = 'nQ'),
   cbind(cumsum_events_space(test, 'nS', events, pre, aft), var = 'nS')) 
-
 test_anom[, cumsum := cumsum(anomaly), .(var, PT_ID, PT_ID)]
-test_anom[, month := factor(month(DTM))]
-test_anom[, year := factor(year(DTM))]
-
-#test_anom <- test_anom[event == my_event]
 
 test_anom_m <- test_anom[, .(median(cumsum), .N), .(var, DTM, event)]
 colnames(test_anom_m)[4] <- 'cumsum'
 test_anom_m <- test_anom_m[complete.cases(test_anom_m)]
 test_anom_m <- test_anom_m[N >= grid_cell_thres]
 
-def_vols <- melt(test[, .(DTM, PT_ID, p, q, s)], id.vars = c('DTM', 'PT_ID'))
+def_vols <- melt(test[, .(DTM, PT_ID, p_nV, q_nV, s_nV)], id.vars = c('DTM', 'PT_ID'))
 def_vols <- def_vols[complete.cases(def_vols)]
-def_vols <- merge(test_anom[, .(DTM, PT_ID, event)], def_vols, by = c('DTM', 'PT_ID'))
+def_vols <- unique(merge(test_anom[, .(DTM, PT_ID = as.numeric(PT_ID), event)], def_vols, by = c('DTM', 'PT_ID')))
+def_vols <- def_vols[, .(value = mean(value)), .(DTM, variable, event)]
+  
 rects <- data.frame(DTM = events$start, 
                     DTM_end = events$start + months(events$dur))
 rects <- unique(merge(rects, test_anom_m[, .(DTM, event)], by = 'DTM'))
 ggplot(test_anom_m, aes(x = as.Date(DTM), y = cumsum, col = var)) +
   geom_rect(data = rects, aes(xmin = DTM, xmax = DTM_end, ymin = -Inf, ymax = Inf), 
             alpha = 0.05, fill = 'grey50', inherit.aes = F) +
-  #geom_bar(data = def_vols, aes(x = DTM, y = value, fill = variable), col = 'black',
-  #         position = "dodge", stat = 'identity',  inherit.aes = F, alpha = 0.3) + 
+  geom_bar(data = def_vols, aes(x = DTM, y = value, fill = variable), col = 'black',
+           position = "dodge", stat = 'identity',  inherit.aes = F, alpha = 0.3) + 
   geom_point() + 
   geom_line() +
   geom_hline(yintercept = 0, linetype = 2) + 
@@ -148,8 +144,8 @@ ggplot(test_anom_m, aes(x = as.Date(DTM), y = cumsum, col = var)) +
   facet_wrap(vars(event), scales = 'free_x') +
   xlab(label = "Time (months)") +
   ylab(label = 'Cumulative sum') + 
-  scale_x_date(breaks = date_breaks("3 months"), 
-               labels = date_format("%b")) +
+  scale_x_date(breaks = date_breaks("6 months"), 
+               labels = date_format("%b %Y")) +
   theme_bw() +
   theme(strip.background = element_rect(fill = var_cols[1])) +
   theme(strip.text = element_text(colour = 'white')) + 

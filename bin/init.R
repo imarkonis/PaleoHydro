@@ -61,7 +61,8 @@ events[, start_diff := unique(month(start_s)) - unique(month(start_q)), ID]
 saveRDS(events, './data/events_met1.Rds') #event information
 
 dtm_short <- dtm[, .(REG, DTM, PT_ID, ID, start, start_month, dur, type, start_s, start_q, 
-                     p = aP, p3 = aP3, q = aQ, s = aS, t = aT, pet = aPET)] 
+                     p = aP, p3 = aP3, q = aQ, s = aS, t = aT, pet = aPET,
+                     p_nV = p, p3_nV = p3, q_nV = q, s_nV = s, t_nV = u_t, pet_nV = u_pet)] 
 saveRDS(dtm_short, './data/mstat_short_met1.Rds') #short version of dtm [for efficiency]
 rm(dtm, dtm_nvars)
 
