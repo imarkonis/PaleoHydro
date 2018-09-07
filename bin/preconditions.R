@@ -1,12 +1,12 @@
 #Explore the preconditions of drought events
 
 source('./source/functions.R'); source('./source/graphics.R') 
-dta <- readRDS('./data/mstat_all.Rds')
+dta <- readRDS('./data/mstat_all_met1.Rds')
 ma_ave <- 30 # time period for the estimation of mean (years)
 
-test <- dta[x == 50 & y == 20, ] #CR or close
-tp <- as.Date("2010-12-01")
-dur <- 5 * 12 #duration for the estimation of the cumulative sum of the given variables (months)
+test <- dta[PT_ID == 493] 
+tp <- as.Date("2015-01-01")
+dur <- 5 * 12 - 1#duration for the estimation of the cumulative sum of the given variables (months)
 test[, nPET := scale(aPET)]
 test[, nP := scale(aP)] #original nP is standardized by month, here are standardized by ts mean
 test[, nQ := scale(aQ)]
@@ -41,44 +41,7 @@ ggplot(test_anom[var == 'nS'], aes(x = month, y = anomaly, fill = year)) +
   theme_opts
 
 ####
-
-test <- dta[x == 30 & y == 30,] #Some other place (south) where the effect of p/pet to q/s is very clear
-tp <- as.Date("2010-12-01")
-test[, nPET := scale(aPET)] 
-test[, nP := scale(aP)] 
-test[, nQ := scale(aQ)]
-test[, nS := scale(aS)]
-
-test_anom <- rbind(
-  cbind(get_anomaly(test, 'nP', tp, ma_ave, dur), var = 'nP'), 
-  cbind(get_anomaly(test, 'nPET', tp, ma_ave, dur), var = 'nPET'),
-  cbind(get_anomaly(test, 'nQ', tp, ma_ave, dur), var = 'nQ'),
-  cbind(get_anomaly(test, 'nS', tp, ma_ave, dur), var = 'nS')) 
-
-test_anom[, cum_anom := cumsum(anomaly), var]
-test_anom[, month := factor(month(DTM))]
-test_anom[, year := factor(year(DTM))]
-
-ggplot(test_anom, aes(x = DTM, y = cum_anom, col = var)) +
-  geom_point() + 
-  geom_line() +
-  scale_color_manual(values = var_cols[c(1, 2, 5, 3)]) +
-  xlab(label = "Time (months)") +
-  ylab(label = 'Cumulative sum') + 
-  theme_bw() +
-  theme_opts
-
-ggplot(test_anom[var == 'nS'], aes(x = month, y = anomaly, fill = year)) +
-  geom_col(col = 'black', size = 0.75) +
-  geom_hline(yintercept = 0) +
-  xlab(label = "Month") +
-  ylab(label = 'Cumulative S (z-score)') + 
-  scale_fill_manual(values = var_cols) +
-  theme_bw() +
-  theme_opts
-
-####
-test <- dta[x == 50 & y == 20,] #working with events
+test <- dta[PT_ID == 493] #working with events
 test[, nPET := scale(aPET)]
 test[, nP := scale(aP)] 
 test[, nQ := scale(aQ)]
@@ -126,8 +89,7 @@ ggplot(test_anom, aes(x = DTM, y = cumsum, col = var)) +
   theme_opts
 
 ####
-test <- dta[REG == 'CEU'] #working with more points
-test <- dta[x %in% 40:55 & y %in% 15:25,] #working with events
+test <- dta[REG == 'NEU'] #working with more points
 test[, nPET := scale(aPET), PT_ID]
 test[, nP := scale(aP), PT_ID] 
 test[, nQ := scale(aQ), PT_ID]
@@ -135,7 +97,7 @@ test[, nS := scale(aS), PT_ID]
 
 pre <- 12
 aft <- 12
-my_events <- c(1921, 1976, 2003, 2012)
+my_events <- c(1921, 2003, 2012, 2017)
 grid_cell_thres <- 20
 
 events <- unique( test[dur >= 6 & yr %in% my_events, .(as.Date(min(DTM)), yr, dur, PT_ID), ID])
