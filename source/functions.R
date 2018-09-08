@@ -8,9 +8,34 @@ get_anomaly <- function(dataset, var, event_start, mwin, duration){  #mwin in ye
   return(out)
 } # Calculates the difference between a *var* and its average in the previous *mwin* years for each value of the next *duration* months
 
+get_periods <- function(eve, pre, aft){
+  oo <- foreach(i = 1:length(eve[, unique(ID)]), .combine = 'rbind') %do% {
+    data.table(no = i, 
+               DTM = seq(eve[, min(DTM) - months(pre), ID]$V1[i],
+                         eve[, max(DTM) + months(aft), ID]$V1[i], 'month'))
+  }
+  event <- eve[, unique(year(start))]
+  event <- data.table(cbind(event, no = 1:length(event)))
+  oo <- oo[event, on = 'no']
+  oo[, no := NULL]
+  return(oo)
+}
+
+cumsum_events <-  function(dataset, eve, pre, aft, scale = T){
+  oo <- get_periods(eve, pre, aft)
+  out <- dataset[oo, on = 'DTM']
+  if(scale == T) (out[, cumsum := cumsum(anom_z), event])
+  else (out[, cumsum := cumsum(anom), event])
+  return(out)
+}
+
+
+
+
 get_anomaly_events <- function(dataset, var, event_start, mwin, duration){  #mwin in years!
   dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right')]
   event_pr_mean <- dataset[DTM %in% event_start, roll_mean]
+  event_pr_mean <- event_pr_mean[complete.cases(event_pr_mean)]
   out <- list()
   for(i in 1:length(event_pr_mean)){
   out[[i]] <- dataset[as.Date(DTM) >= event_start[i] & as.Date(DTM) < event_start[i] %m+% months(duration[i]), 
@@ -65,8 +90,8 @@ cumsum_events_space_all <- function(dataset, var, events_dt, pre_dur, aft_dur, m
   out <- list()
   for(i in 1:length(events_dt$PT_ID)){
     out[[i]] <- dataset[PT_ID == events_dt$PT_ID[i] & 
-                          DTM >= events_dt$start[i] - months(pre_dur) & 
-                          DTM <= events_dt$start[i] + months(events_dt$dur[i] + aft_dur), 
+                          DTM >= events_dt$min_start[i] & 
+                          DTM <= events_dt$max_end[i], 
                         .(DTM, 
                           anomaly = eval(parse(text = var)) - event_pr_mean[i]$roll_mean, 
                           event = year(events_dt$start[i]))]
