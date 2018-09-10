@@ -31,7 +31,8 @@ cumsum_events_space <- function(dataset, var, events_dt, pre_dur, aft_dur, mwin 
   cluster = makeCluster(no_cores, type = "SOCK")
   registerDoSNOW(cluster)
   out <- foreach (i = 1:length(events_dt$PT_ID), .packages = c("lubridate")) %dopar%  {
-    dataset[PT_ID == events_dt$PT_ID[i] & as.Date(DTM) >= as.Date(events_dt$start[i]) - months(pre_dur) & 
+    dataset[PT_ID == events_dt$PT_ID[i] & 
+              as.Date(DTM) >= as.Date(events_dt$start[i]) - months(pre_dur) & 
               as.Date(DTM) <= as.Date(events_dt$start[i]) + months(events_dt$dur[i] + aft_dur), 
             .(DTM, anomaly = eval(parse(text = var)) - event_pr_mean[i]$roll_mean, event = floor(median(yr)))]
   }

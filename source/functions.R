@@ -43,7 +43,7 @@ get_periods_par <- function(dataset, eve, pre, aft){
 cumsum_events <-  function(dataset, eve, pre, aft, scale = T, par = F){
   if(par == F) (oo <- get_periods(dataset, eve, pre, aft))
   else(oo <- get_periods_par(dataset, eve, pre, aft))
-  out = test[oo, on = c('DTM', 'PT_ID')]
+  out = dataset[oo, on = c('DTM', 'PT_ID')]
   if(scale == T) (out[, cumsum := cumsum(anom_z), c('event', 'variable', 'PT_ID')])
   else (out[, cumsum := cumsum(anom), c('event', 'variable', 'PT_ID')])
   return(out)
