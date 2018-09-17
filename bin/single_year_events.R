@@ -16,7 +16,7 @@ plot_events_time(to_plot)
 to_plot <- melt(data = veg_dr_yr[, .(PT_ID, DTM, yr, month, nP, nP3, nQ, nS, nT)], #nPET has a very sharp density and was not looking good in denstity plots
                 id.vars = c('PT_ID', 'yr', 'month', 'DTM')) 
 plot_var_dens_yr(to_plot) #looks realistic
-ggsave('results/figs/veg_dr_3_strict_CEU.tiff', height = 18, width = 18, units = "cm")
+ggsave('results/figs/veg_dr_3_strict_CEU.png', height = 18, width = 18, units = "cm")
 
 #Checking the 2003 drought
 to_plot <- melt(data = dta_CEU[yr == 2003, .(PT_ID, DTM, yr, month, nP, nP3, nQ, nS, nT)], 
