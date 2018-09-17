@@ -14,9 +14,9 @@ get_periods <- function(dataset, eve, pre, aft){
   events[, start_aft := start + months(dur) + months(aft)]
   out <- foreach(i = 1:nrow(events), .combine = 'rbind') %do% {
     unique(dataset[PT_ID == events$PT_ID[i] &
-              DTM >= events$start_pre[i] & 
-              DTM <= events$start_aft[i],
-            .(PT_ID, DTM, event = events$event[i])])
+                     DTM >= events$start_pre[i] & 
+                     DTM <= events$start_aft[i],
+                   .(PT_ID, DTM, event = events$event[i])])
   }
   return(out)
 }
@@ -49,6 +49,23 @@ cumsum_events <-  function(dataset, eve, pre, aft, scale = T, par = F){
   return(out)
 }
 
+space_prpg <- function(event, thres = 0.1, same_year = F){ #Spatial propagation of drought event derived from maximum number of points
+  peak <- as.Date(apply(table(event[!is.na(value) & !is.na(start), DTM, variable]), 1, function(x) names(which.max(x))))
+  peak_pts <- unique(event[DTM %in% peak, PT_ID])
+  start <- event[!is.na(value) & !is.na(start), .N, .(variable, start)]
+  start[, limit := thres * sum(N), .(variable)]
+  if(same_year == F){
+    start <- start[N > limit, min(start), variable]}
+  else (start <- start[N > limit & year(start) == year(min(event$DTM)), min(start), variable])
+  end <- event[!is.na(value) & !is.na(start), .N, .(variable, end = start + months(dur))]
+  end[, limit := thres * sum(N), .(variable)]
+  end <- end[N > limit, max(end), variable]
+  out <- data.frame(start = start$V1, peak, end = end$V1)
+  rownames(out) <- c('p_dv', 'q_dv', 's_dv')
+  return(out)
+}
+
+
 event_start <- function(dataset, eve){
   return(table(dataset[event == eve & variable == 'p', min(DTM), PT_ID]$V1))
 }
@@ -60,6 +77,7 @@ event_end <- function(dataset, eve){
 
 
 
+#############OLDER
 cumsum_events_space <- function(dataset, var, events_dt, pre_dur, aft_dur, mwin = 30){  #mwin in years!
   dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right'), PT_ID]
   event_pr_mean <- dataset[DTM == start, roll_mean, .(PT_ID, DTM)]
