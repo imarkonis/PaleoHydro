@@ -6,7 +6,7 @@ cz_sp <- dta_sp[LAT >= 48 & LAT <= 50 & LON >= 13 & LON <= 17, PT_ID]
 sca_sp <- dta_sp[LAT >= 55 & LAT <= 65 & LON >= 5 & LON <= 30, PT_ID]
 ger_sp <- dta_sp[LAT >= 47 & LAT <= 55 & LON >= 5 & LON <= 15, PT_ID]
 
-mhm_dv <- dta[, .(REG, PT_ID, DTM, ID, start, dur, p_dv, q_dv, q_dv)]
+mhm_dv <- dta[, .(REG, PT_ID, DTM, ID, start, dur, p3_dv, q_dv, s_dv)]
 mhm_dv <- melt(mhm_dv, id.vars = c('REG', 'PT_ID', 'DTM', 'ID', 'start', 'dur'))
 
 #CEU & NEU sum
@@ -23,7 +23,7 @@ event_2015_prpg <- space_prpg(event_2015)
 event_1921_month <- mhm_dv[DTM >= event_1921_prpg$start[2] &
                              DTM <= event_1921_prpg$start[2] + months(event_2018_dur) &
                              PT_ID %in% unique(event_1921[DTM == event_1921_prpg$peak[2] & 
-                                                            variable == 'q_dv' & 
+                                                            variable == 's_dv' & 
                                                             !is.na(value), PT_ID]), 
                            sum(value, na.rm = T), 
                            .(variable, month(DTM), year = factor(year(DTM)))]
@@ -32,7 +32,7 @@ event_1921_month[, rel_month := month - 2 + 1]
 
 event_2018_month <- event_2018[DTM >= event_2018_prpg$start[2] & 
                                  PT_ID %in% unique(event_2018[DTM == event_2018_prpg$peak[2] & 
-                                                                variable == 'q_dv' & 
+                                                                variable == 's_dv' & 
                                                                 !is.na(value), PT_ID]), 
                                sum(value, na.rm = T), 
                                .(variable, month(DTM), year = factor(year(DTM)))]
@@ -42,7 +42,7 @@ event_2018_month[, rel_month := month - month(event_2018_prpg$start[2]) + 1]
 event_2003_month <- mhm_dv[DTM >= event_2003_prpg$start[2] &
                              DTM <= event_2003_prpg$start[2] + months(event_2018_dur) &
                              PT_ID %in% unique(event_2003[DTM == event_2003_prpg$peak[2] & 
-                                                            variable == 'q_dv' & 
+                                                            variable == 's_dv' & 
                                                             !is.na(value), PT_ID]), 
                            sum(value, na.rm = T), 
                            .(variable, month(DTM), year = factor(year(DTM)))]
@@ -52,7 +52,7 @@ event_2003_month[, rel_month := month - 2 + 1]
 event_2015_month <- event_2015[DTM >= event_2015_prpg$start[2] & 
                                  DTM <= event_2015_prpg$start[2] + months(event_2018_dur) &
                                  PT_ID %in% unique(event_2015[DTM == event_2015_prpg$peak[2] & 
-                                                                variable == 'q_dv' & 
+                                                                variable == 's_dv' & 
                                                                 !is.na(value), PT_ID]), 
                                sum(value, na.rm = T), 
                                .(variable, month(DTM), year = factor(year(DTM)))]
@@ -70,18 +70,18 @@ ggplot(event_comp, aes(x = rel_month, y = cumsum, col = year)) +
   xlab(label = "Time (months)") +
   ylab(label = 'Cumulative sum') + 
   facet_wrap(vars(variable), scales = 'free_y') +
-  ggtitle('Runoff drought in CEU & NEU (only cells with drought)') + 
+  ggtitle('Soil moisture drought in CEU & NEU (only cells with drought)') + 
   theme_bw() +
   theme(strip.background = element_rect(fill = var_cols[1])) +
   theme(strip.text = element_text(colour = 'white')) + 
   theme_opts
-ggsave('./results/figs/compare_cneu_q_sum.png', height = 3)
+ggsave('./results/figs/compare_cneu_s_sum.png', height = 3)
 
 #CEU & NEU mean
 event_1921_month <- mhm_dv[DTM >= event_1921_prpg$start[2] &
                              DTM <= event_1921_prpg$start[2] + months(event_2018_dur) &
                              PT_ID %in% unique(event_1921[DTM == event_1921_prpg$peak[2] & 
-                                                            variable == 'q_dv' & 
+                                                            variable == 's_dv' & 
                                                             !is.na(value), PT_ID]), 
                            mean(value, na.rm = T), 
                            .(variable, month(DTM), year = factor(year(DTM)))]
@@ -90,7 +90,7 @@ event_1921_month[, rel_month := month - 2 + 1]
 
 event_2018_month <- event_2018[DTM >= event_2018_prpg$start[2] & 
                                  PT_ID %in% unique(event_2018[DTM == event_2018_prpg$peak[2] & 
-                                                                variable == 'q_dv' & 
+                                                                variable == 's_dv' & 
                                                                 !is.na(value), PT_ID]), 
                                mean(value, na.rm = T), 
                                .(variable, month(DTM), year = factor(year(DTM)))]
@@ -100,7 +100,7 @@ event_2018_month[, rel_month := month - month(event_2018_prpg$start[2]) + 1]
 event_2003_month <- mhm_dv[DTM >= event_2003_prpg$start[2] &
                              DTM <= event_2003_prpg$start[2] + months(event_2018_dur) &
                              PT_ID %in% unique(event_2003[DTM == event_2003_prpg$peak[2] & 
-                                                            variable == 'q_dv' & 
+                                                            variable == 's_dv' & 
                                                             !is.na(value), PT_ID]), 
                            mean(value, na.rm = T), 
                            .(variable, month(DTM), year = factor(year(DTM)))]
@@ -110,7 +110,7 @@ event_2003_month[, rel_month := month - 2 + 1]
 event_2015_month <- event_2015[DTM >= event_2015_prpg$start[2] & 
                                  DTM <= event_2015_prpg$start[2] + months(event_2018_dur) &
                                  PT_ID %in% unique(event_2015[DTM == event_2015_prpg$peak[2] & 
-                                                                variable == 'q_dv' & 
+                                                                variable == 's_dv' & 
                                                                 !is.na(value), PT_ID]), 
                                mean(value, na.rm = T), 
                                .(variable, month(DTM), year = factor(year(DTM)))]
@@ -128,12 +128,34 @@ ggplot(event_comp, aes(x = rel_month, y = cumsum, col = year)) +
   xlab(label = "Time (months)") +
   ylab(label = 'Cumulative sum of monthly mean') + 
   facet_wrap(vars(variable), scales = 'free_y') +
-  ggtitle('Runoff drought in CEU & NEU (only cells with drought)') + 
+  ggtitle('Soil moisture drought in CEU & NEU (only cells with drought)') + 
   theme_bw() +
   theme(strip.background = element_rect(fill = var_cols[1])) +
   theme(strip.text = element_text(colour = 'white')) + 
   theme_opts
-ggsave('./results/figs/compare_cneu_q_mean.png', height = 3)
+ggsave('./results/figs/compare_cneu_s_mean.png', height = 3)
 
 
+length(unique(event_2015[DTM >= event_2015_prpg$start[2] & 
+                           DTM <= event_2015_prpg$start[2] + months(event_2018_dur) &
+                           PT_ID %in% unique(event_2015[DTM == event_2015_prpg$peak[2] & 
+                                                          variable == 'q_dv' & 
+                                                          !is.na(value), PT_ID]), PT_ID]))
+
+length(unique(event_2003[DTM >= event_2003_prpg$start[2] & 
+                           DTM <= event_2003_prpg$start[2] + months(event_2018_dur) &
+                           PT_ID %in% unique(event_2003[DTM == event_2003_prpg$peak[2] & 
+                                                          variable == 'q_dv' & 
+                                                          !is.na(value), PT_ID]), PT_ID]))
+
+length(unique(event_2018[DTM >= event_2018_prpg$start[2] & 
+                           PT_ID %in% unique(event_2018[DTM == event_2018_prpg$peak[2] & 
+                                                          variable == 'q_dv' & 
+                                                          !is.na(value), PT_ID]), PT_ID]))
+
+length(unique(event_1921[DTM >= event_1921_prpg$start[2] & 
+                           DTM <= event_1921_prpg$start[2] + months(event_2018_dur) &
+                           PT_ID %in% unique(event_1921[DTM == event_1921_prpg$peak[2] & 
+                                                          variable == 'q_dv' & 
+                                                          !is.na(value), PT_ID]), PT_ID]))
 

@@ -31,7 +31,7 @@ dtm[, month := month(DTM)]
 dtm[, PT_ID := .GRP, .(x, y)] #id for each grid cell
 
 #events begin when !is.na(p3 | s | q) 
-table(dtm[EVE == T]$EID) #EID is not unique for each event - serial number of event at each grid cell (below q20) EID
+# table(dtm[EVE == T]$EID) #EID is not unique for each event - serial number of event at each grid cell (below q20) EID
 dtm[EVE == T & EID > 0, ID := .GRP, .(x, y, EID)] #in this way we have event IDs for each grid box
 dtm[EVE == T, start := min(DTM, na.rm = T), ID] 
 dtm[EVE == T, start_month := month(min(DTM, na.rm = T)), ID] 
@@ -65,15 +65,3 @@ dtm_short <- dtm[, .(REG, DTM, PT_ID, ID, start, start_month, dur, type, start_s
                      p_dv = p, p3_dv = p3, q_dv = q, s_dv = s, t_ev = u_t, pet_ev = u_pet)] 
 saveRDS(dtm_short, './data/mstat_short_met1.Rds') #short version of dtm [for efficiency]
 rm(dtm, dtm_short)
-
-## Examples
-
-#Events happened at grid cell (34, 24) :
-test <- dtm[x == 34 & y == 24]
-test[, table(ID)]
-
-#The top 30 droughts in terms of duration at this grid cell are:
-test_top_30_ids <- head(unique(test[order(-dur), .(ID, dur)]), 30)
-test_top_30 <- dtm[ID %in% test_top_30_ids$ID]
-
-

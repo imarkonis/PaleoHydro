@@ -1,13 +1,6 @@
 library(data.table); library(ggplot2); library(lubridate); library(zoo); library(scales) 
 library(ncdf4); library(doSNOW)
 
-get_anomaly <- function(dataset, var, event_start, mwin, duration){  #mwin in years!
-  dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right')]
-  event_pr_mean <- dataset[DTM == event_start, roll_mean]
-  out <- dataset[as.Date(DTM) >= event_start & as.Date(DTM) < event_start  %m+% months(duration), .(DTM, anomaly = eval(parse(text = var)) - event_pr_mean)]  #perhaps consider monthly means as well
-  return(out)
-} # Calculates the difference between a *var* and its average in the previous *mwin* years for each value of the next *duration* months
-
 get_periods <- function(dataset, eve, pre, aft){
   events <- unique(eve[, .(PT_ID, start, dur, event = year(start))])
   events[, start_pre := start - months(pre)]
@@ -64,55 +57,3 @@ space_prpg <- function(event, thres = 0.1, same_year = F){ #Spatial propagation 
   rownames(out) <- c('p_dv', 'q_dv', 's_dv')
   return(out)
 }
-
-
-event_start <- function(dataset, eve){
-  return(table(dataset[event == eve & variable == 'p', min(DTM), PT_ID]$V1))
-}
-
-event_end <- function(dataset, eve){
-  return(table(dataset[event == eve & variable == 'p', max(DTM), PT_ID]$V1))
-}
-
-
-
-
-#############OLDER
-cumsum_events_space <- function(dataset, var, events_dt, pre_dur, aft_dur, mwin = 30){  #mwin in years!
-  dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right'), PT_ID]
-  event_pr_mean <- dataset[DTM == start, roll_mean, .(PT_ID, DTM)]
-  event_pr_mean <- event_pr_mean[complete.cases(event_pr_mean)]
-  out <- list()
-  for(i in 1:length(events_dt$PT_ID)){
-    out[[i]] <- dataset[PT_ID == events_dt$PT_ID[i] & 
-                          DTM >= events_dt$start[i] - months(pre_dur) & 
-                          DTM <= events_dt$start[i] + months(events_dt$dur[i] + aft_dur), 
-                        .(DTM, 
-                          anomaly = eval(parse(text = var)) - event_pr_mean[i]$roll_mean, 
-                          event = year(events_dt$start[i]))]
-  }
-  names(out) <- events_dt$PT_ID
-  out <- data.table(melt(out, id.vars = c('DTM', 'anomaly', 'event')))
-  colnames(out)[4] <- 'PT_ID'
-  return(out)
-} 
-
-cumsum_events_space_all <- function(dataset, var, events_dt, pre_dur, aft_dur, mwin = 30){  #mwin in years!
-  dataset[, roll_mean := rollmean(eval(parse(text = var)), k = mwin, na.pad = T, align = 'right'), PT_ID]
-  event_pr_mean <- dataset[DTM == start, roll_mean, .(PT_ID, DTM)]
-  event_pr_mean <- event_pr_mean[complete.cases(event_pr_mean)]
-  out <- list()
-  for(i in 1:length(events_dt$PT_ID)){
-    out[[i]] <- dataset[PT_ID == events_dt$PT_ID[i] & 
-                          DTM >= events_dt$min_start[i] & 
-                          DTM <= events_dt$max_end[i], 
-                        .(DTM, 
-                          anomaly = eval(parse(text = var)) - event_pr_mean[i]$roll_mean, 
-                          event = year(events_dt$start[i]))]
-  }
-  names(out) <- events_dt$PT_ID
-  out <- data.table(melt(out, id.vars = c('DTM', 'anomaly', 'event')))
-  colnames(out)[4] <- 'PT_ID'
-  return(out)
-} 
-
