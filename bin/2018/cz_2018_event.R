@@ -5,15 +5,15 @@ dta <- readRDS('./data/mstat_short_met1.Rds')
 dta_sp <- readRDS('./data/spatial.Rds')
 cz_sp <- dta_sp[LAT >= 48 & LAT <= 50 & LON >= 13 & LON <= 17, PT_ID]
 
-mhm <- dta[, .(REG, PT_ID, DTM, ID, start, dur, p, q, s, pet)]
+mhm <- dta[, .(REG, PT_ID, DTM, ID, start, dur, p3, q, s, pet)]
 mhm <- melt(mhm, id.vars = c('REG', 'PT_ID', 'DTM', 'ID', 'start', 'dur'))
 mhm[, value_z := scale(value), .(variable, PT_ID)]
 
-mhm_dv <- dta[, .(REG, PT_ID, DTM, ID, start, dur, p_dv, q_dv, s_dv)]
+mhm_dv <- dta[, .(REG, PT_ID, DTM, ID, start, dur, p3_dv, q_dv, s_dv)]
 mhm_dv <- melt(mhm_dv, id.vars = c('REG', 'PT_ID', 'DTM', 'ID', 'start', 'dur'))
 rm(dta); gc()
 
-pre <- 12 * 10 + 1
+pre <- 12 + 1
 aft <- 0
 dur_event <- 3
 mwin <- 50
@@ -27,8 +27,8 @@ mean_30 <- mhm_cz[DTM < min_start - months(pre) &  #The average is estimated bef
 mhm_cz <- mhm_cz[mean_30, on = c('variable', 'PT_ID')]
 mhm_cz[, anom := value_z - V1]
 
-mhm_cz_events[variable == 'p', table(dur)]
-mhm_cz_events[variable == 'p', table(start)]
+mhm_cz_events[variable == 'p3', table(dur)]
+mhm_cz_events[variable == 'p3', table(start)]
 mhm_cz_events[, length(unique(PT_ID))]/mhm_cz[, length(unique(PT_ID))] 
 
 mhm_cz_periods <- get_periods_par(mhm_cz, mhm_cz_events, pre, aft) #Period of events including pre and aft
