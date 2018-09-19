@@ -75,7 +75,7 @@ ggplot(event_comp, aes(x = rel_month, y = cumsum, col = year)) +
   theme(strip.background = element_rect(fill = var_cols[1])) +
   theme(strip.text = element_text(colour = 'white')) + 
   theme_opts
-ggsave('./results/figs/compare_cneu_q_sum.png', height = 3)
+ggsave('./results/figs/2018/compare_cneu_q_sum.png', height = 3)
 
 #CEU & NEU mean
 event_1921_month <- mhm_dv[DTM >= event_1921_prpg$start[2] &
@@ -133,7 +133,7 @@ ggplot(event_comp, aes(x = rel_month, y = cumsum, col = year)) +
   theme(strip.background = element_rect(fill = var_cols[1])) +
   theme(strip.text = element_text(colour = 'white')) + 
   theme_opts
-ggsave('./results/figs/compare_cneu_q_mean.png', height = 3)
+ggsave('./results/figs/2018/compare_cneu_q_mean.png', height = 3)
 
 
 

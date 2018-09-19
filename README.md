@@ -34,3 +34,9 @@ Event is always when at least one of deficit volumes for p3, q, s is > 0, the pe
 p, p3, q, s are the absolute values for precip, 3-month precip, runoff and soil moisture and
 dv_p, dv_p3, dv_q, dv_s are the deficit volumes for precip, 3-month precip, runoff and soil moisture, 
 ev_t, ev_pet are the excess volumes for temperature and pet
+
+Data can be found at:
+
+https://owncloud.cesnet.cz/index.php/s/dqLxqzFLpySZsVe
+
+https://owncloud.cesnet.cz/index.php/s/jVvX6z3JR4ocelZ
