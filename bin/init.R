@@ -1,8 +1,8 @@
 #First script to run
 
 #Folder structure
- dir.create("./data"); dir.create("./results"); #results and data folders are ignored due to size (.gitignore)
- dir.create("./results/figs"); dir.create("./results/figs/2018"); dir.create("./results/figs/distributions");
+ dir.create("./data");  dir.create("./data/raw"); dir.create("./results"); #results and data folders are ignored due to size (.gitignore)
+ dir.create("./results/figs"); dir.create("./results/figs/2018"); dir.create("./results/figs/distributions")
 source('./source/functions.R') 
  
 #Data preparation
@@ -33,6 +33,7 @@ dtm[, PT_ID := .GRP, .(x, y)] #id for each grid cell
 #events begin when !is.na(p3 | s | q) 
 # table(dtm[EVE == T]$EID) #EID is not unique for each event - serial number of event at each grid cell (below q20) EID
 dtm[EVE == T & EID > 0, ID := .GRP, .(x, y, EID)] #in this way we have event IDs for each grid box
+dtm[y > 3500000, REG := 'NEU'] #fix for minor discrepancy in labeling
 dtm[EVE == T, start := min(DTM, na.rm = T), ID] 
 dtm[EVE == T, start_month := month(min(DTM, na.rm = T)), ID] 
 dtm[(start_month >= 1 & start_month <= 2) | start_month >= 9, type := factor('cold')]

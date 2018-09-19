@@ -6,9 +6,11 @@ After forking the repo, run init.R to create directory structure and prepare dat
 
 In 'preconditions.R' there is the main code for plotting the cumulative anomalies and normalised deficit volumes of a single or median of multiple grid cells. The resulting comparison scripts can be found in 'bin/2018'.
 
-'event_properties.R' is an on-going investigation of potential changes in the properties drought events
+'event_properties.R' is an on-going investigation of potential changes in the properties drought events.
 
-An older approach can be found in 'single_year_events.R', with density plots for the preconditions of different single-year events
+'som.R' contains the self-organizing map clustering.
+
+An older approach can be found in 'single_year_events.R', with density plots for the preconditions of different single-year events.
 
 To see the position of PT_ID use 'space_aid.R'.
 
