@@ -44,28 +44,36 @@ dtm[!is.na(s), start_s := min(DTM, na.rm = T), ID]
 dtm[!is.na(q), start_q := min(DTM, na.rm = T), ID]
 dtm[!is.na(p3), start_p3 := min(DTM, na.rm = T), ID]
 setorder(dtm, PT_ID)
-saveRDS(dtm, './data/mstat_all_met1.Rds') #dataset with all variables that can be used in further analysis
+#saveRDS(dtm, './data/mstat_all_met1.Rds') #dataset with all variables that can be used in further analysis
 
 dtb <- readRDS('./data/raw/rs_met_001.rds')
-
 dts_sp <- unique(dts[, 1:4])
 dtm_sp <- unique(dtm[, .(x, y, PT_ID)])
 dtm_sp <- merge(dtm_sp, dts_sp, by = c('x', 'y'))
 
 saveRDS(dtm_sp, file = './data/spatial.Rds') #point IDS, lat/lon and x/y coords
 
-events <- dtm[!is.na(ID) & !is.na(REG), .(REG, PT_ID, x, y, ID, type, start, start_month, dur, start_s, start_q, start_p3, p, q, s, u_pet, u_t)]
+events <- dtm[!is.na(ID) & !is.na(REG), .(REG, PT_ID, x, y, ID, type, start, start_month, dur, start_s, start_q, start_p3, 
+                                          p_dv = p, q_dv = q, s_dv = s, pet_ev = u_pet, t_ev = u_t)]
 events[, start_s := max(start_s, na.rm = T), .(PT_ID, ID)]
 events[, start_q := max(start_q, na.rm = T), .(PT_ID, ID)]
 events[, start_p3 := max(start_p3, na.rm = T), .(PT_ID, ID)]
-events[, p := mean(p, na.rm = T), ID]
-events[, q := mean(q, na.rm = T), ID]
-events[, s := mean(s, na.rm = T), ID]
-events[, pet := mean(u_pet, na.rm = T), ID]
-events[, t := mean(u_t, na.rm = T), ID]
-events[, u_pet := NULL]      
-events[, u_t := NULL]      
+events[, p_dv_m := mean(p_dv, na.rm = T), ID]
+events[, q_dv_m := mean(q_dv, na.rm = T), ID]
+events[, s_dv_m := mean(s_dv, na.rm = T), ID]
+events[, pet_ev_m := mean(pet_ev, na.rm = T), ID]
+events[, t_ev_m := mean(t_ev, na.rm = T), ID]
+events[, p_dv := NULL]      
+events[, q_dv := NULL]      
+events[, s_dv := NULL]      
+events[, t_ev := NULL]      
+events[, pet_ev := NULL]      
 events <- events[!duplicated(events)]
+events[is.na(p_dv_m), p_dv_m := 0]
+events[is.na(q_dv_m), q_dv_m := 0]
+events[is.na(s_dv_m), s_dv_m := 0]
+events[is.na(pet_ev_m), pet_ev_m := 0]
+events[is.na(t_ev_m), t_ev_m := 0]
 #events[, start_diff := unique(month(start_s)) - unique(month(start_q)), ID]
 
 saveRDS(events, './data/events_met1.Rds') #event information
