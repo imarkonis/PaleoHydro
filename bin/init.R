@@ -53,9 +53,8 @@ dtm_sp <- merge(dtm_sp, dts_sp, by = c('x', 'y'))
 
 saveRDS(dtm_sp, file = './data/spatial.Rds') #point IDS, lat/lon and x/y coords
 
-events <- dtm[!is.na(ID) & !is.na(REG), .(REG, PT_ID, x, y, ID, type, year = year(DTM), start, start_month, dur, start_s, start_q, start_p3, 
-                                          p_dv = p, q_dv = q, s_dv = s, pet_ev = u_pet, t_ev = u_t)]
-events[, start_s := max(start_s, na.rm = T), .(PT_ID, ID)]
+events <- dtm[!is.na(ID) & !is.na(REG), .(REG, PT_ID, x, y, ID, type, start, start_month, dur, start_s, start_q, start_p3, 
+                                          p_dv = p, q_dv = q, s_dv = s, pet_ev = u_pet, t_ev = u_t)] 
 events[, start_q := max(start_q, na.rm = T), .(PT_ID, ID)]
 events[, start_p3 := max(start_p3, na.rm = T), .(PT_ID, ID)]
 events[, p_dv_m := mean(p_dv, na.rm = T), ID]
