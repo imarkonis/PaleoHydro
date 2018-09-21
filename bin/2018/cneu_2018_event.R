@@ -42,7 +42,7 @@ rects <- data.frame(DTM = mhm_cneu_events$start,
                     DTM_end = mhm_cneu_events$start + months(mhm_cneu_events$dur))
 rects <- unique(merge(rects, mhm_cneu_ext_m[, .(DTM, event)], by = 'DTM'))
 
-def_vols <- mhm_dv[PT_ID %in% cneu_sp & DTM %in% mhm_cneu_ext$DTM]
+def_vols <- mhm_dv[REG %in% c('CEU', 'NEU') & DTM %in% mhm_cneu_ext$DTM]
 def_vols <- unique(merge(unique(mhm_cneu_ext[, .(DTM, PT_ID = as.numeric(PT_ID), event)]), def_vols, by = c('DTM', 'PT_ID')))
 def_vols[, value := sum(value, na.rm = T), .(DTM, variable)]
 def_vols[, value := value/mean(value, na.rm = T), variable]
