@@ -57,6 +57,7 @@ events <- dtm[!is.na(ID) & !is.na(REG), .(REG, PT_ID, x, y, ID, type, start, sta
                                           p_dv = p, q_dv = q, s_dv = s, pet_ev = u_pet, t_ev = u_t)] 
 events[, start_q := max(start_q, na.rm = T), .(PT_ID, ID)]
 events[, start_p3 := max(start_p3, na.rm = T), .(PT_ID, ID)]
+events[, start_s := max(start_s, na.rm = T), .(PT_ID, ID)]
 events[, p_dv_m := mean(p_dv, na.rm = T), ID]
 events[, q_dv_m := mean(q_dv, na.rm = T), ID]
 events[, s_dv_m := mean(s_dv, na.rm = T), ID]
