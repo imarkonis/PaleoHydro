@@ -1,3 +1,4 @@
+library(RColorBrewer)
 source('./source/functions.R')
 
 theme_opts <- list(theme(axis.ticks.length=unit(-0.1, "cm"),  
@@ -11,8 +12,10 @@ colset_mid <- c( "#4D648D", "#337BAE", "#97B8C2",  "#739F3D", "#ACBD78",
 colset_mid_qual <- colset_mid[c(11, 2, 4, 6,  1, 8, 10, 5, 7, 3, 9, 12)]
 palette_mid <- colorRampPalette(colset_mid)
 palette_mid_qual <- colorRampPalette(colset_mid_qual)
+palette_spectral <- colorRampPalette(rev(brewer.pal(11, "Spectral")), space = "Lab")
 
-plot_events_time <- function(dt){
+
+plot.events.time <- function(dt){
   ggplot(dt, aes(x = yr, y = area)) + 
   geom_point(size = 2) + 
   geom_segment(aes(x = yr, 
@@ -25,7 +28,7 @@ plot_events_time <- function(dt){
   theme_opts + 
   scale_y_continuous(expand = c(0, 0))} 
 
-plot_var_dens_yr <- function(dt){
+plot.var.dens.yr <- function(dt){
   ggplot(dt, aes(x = value, fill = variable, group = variable)) +
   geom_density(alpha = 0.8) +
   geom_vline(xintercept = 0, linetype = "dashed", size = 0.3, col = var_cols[1]) + 
@@ -38,7 +41,7 @@ plot_var_dens_yr <- function(dt){
   theme_opts
 }
 
-plot_var_dens_prv <- function(dt){
+plot.var.dens.prv <- function(dt){
   ggplot(dt, aes(x = value, fill = variable, group = variable)) +
     geom_density(alpha = 0.8) +
     geom_vline(xintercept = 0, linetype = "dashed", size = 0.3, col = var_cols[1]) + 
@@ -51,7 +54,7 @@ plot_var_dens_prv <- function(dt){
     theme_opts
 }
 
-plot_var_dens_nxt <- function(dt){
+plot.var.dens.nxt <- function(dt){
   dt[, time_f := (paste0('+', as.character(time)))]
   ggplot(dt, aes(x = value, fill = variable, group = variable)) +
     geom_density(alpha = 0.8) +
@@ -64,4 +67,3 @@ plot_var_dens_nxt <- function(dt){
     theme(strip.text = element_text(colour = 'white')) + 
     theme_opts
 }
-
