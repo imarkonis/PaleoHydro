@@ -35,25 +35,17 @@ dtm[, PT_ID := .GRP, .(x, y)] #id for each grid cell
 dtm[EVE == T & EID > 0, ID := .GRP, .(x, y, EID)] #in this way we have event IDs for each grid box
 dtm[y > 3500000, REG := 'NEU'] #fix for minor discrepancy in labeling
 dtm[EVE == T, start := min(DTM, na.rm = T), ID] 
-dtm[EVE == T, start_month := month(min(DTM, na.rm = T)), ID] 
-dtm[(start_month >= 1 & start_month <= 2) | start_month >= 9, type := factor('cold')]
-dtm[(start_month >= 3 & start_month <= 8), type := factor('warm')]
+dtm[EVE == T, start_month := month(start)] 
 dtm[!is.na(ID), dur := .N, ID] #and their duration in months 
-
+dtm[EVE == T, end := max(DTM, na.rm = T), ID] 
+dtm[EVE == T, end_month := month(end)] 
 dtm[!is.na(s), start_s := min(DTM, na.rm = T), ID]
 dtm[!is.na(q), start_q := min(DTM, na.rm = T), ID]
 dtm[!is.na(p3), start_p3 := min(DTM, na.rm = T), ID]
 setorder(dtm, PT_ID)
 #saveRDS(dtm, './data/mstat_all_met1.Rds') #dataset with all variables that can be used in further analysis
 
-dtb <- readRDS('./data/raw/rs_met_001.rds')
-dts_sp <- unique(dts[, 1:4])
-dtm_sp <- unique(dtm[, .(x, y, PT_ID)])
-dtm_sp <- merge(dtm_sp, dts_sp, by = c('x', 'y'))
-
-saveRDS(dtm_sp, file = './data/spatial.Rds') #point IDS, lat/lon and x/y coords
-
-events <- dtm[!is.na(ID) & !is.na(REG), .(REG, PT_ID, x, y, ID, type, start, start_month, dur, start_s, start_q, start_p3, 
+events <- dtm[!is.na(ID) & !is.na(REG), .(REG, PT_ID, x, y, ID, start, start_month, end, end_month, dur, start_s, start_q, start_p3, 
                                           p_dv = p, q_dv = q, s_dv = s, pet_ev = u_pet, t_ev = u_t)] 
 events[, start_q := max(start_q, na.rm = T), .(PT_ID, ID)]
 events[, start_p3 := max(start_p3, na.rm = T), .(PT_ID, ID)]
@@ -75,11 +67,17 @@ events[is.na(s_dv_m), s_dv_m := 0]
 events[is.na(pet_ev_m), pet_ev_m := 0]
 events[is.na(t_ev_m), t_ev_m := 0]
 #events[, start_diff := unique(month(start_s)) - unique(month(start_q)), ID]
-
 saveRDS(events, './data/events_met1.Rds') #event information
 
-dtm_short <- dtm[, .(REG, DTM, PT_ID, ID, start, start_month, dur, type, start_s, start_q, start_p3,
+dtm_short <- dtm[, .(REG, DTM, PT_ID, ID, start, start_month, end, end_month, dur, start_s, start_q, start_p3,
                      p = aP, p3 = aP3, q = aQ, s = aS, t = aT, pet = aPET,
                      p_dv = p, p3_dv = p3, q_dv = q, s_dv = s, t_ev = u_t, pet_ev = u_pet)] 
 saveRDS(dtm_short, './data/mstat_short_met1.Rds') #short version of dtm [for efficiency]
 rm(dtm, dtm_short)
+
+dtb <- readRDS('./data/raw/rs_met_001.rds')
+dts_sp <- unique(dts[, 1:4])
+dtm_sp <- unique(dtm[, .(x, y, PT_ID)])
+dtm_sp <- merge(dtm_sp, dts_sp, by = c('x', 'y'))
+
+saveRDS(dtm_sp, file = './data/spatial.Rds') #point IDS, lat/lon and x/y coords
