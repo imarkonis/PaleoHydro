@@ -9,6 +9,8 @@ mhm_dv <- dta[, .(REG, PT_ID, DTM, ID, start, dur, p_dv, q_dv, s_dv)]
 mhm_dv <- melt(mhm_dv, id.vars = c('REG', 'PT_ID', 'DTM', 'ID', 'start', 'dur'))
 rm(dta); gc()
 
-event_1921 <- mhm_dv[year(DTM) == 1921 & PT_ID %in% cz_sp]
+event_1921 <- mhm_dv[year(DTM) == 1908]
+event_1922 <- mhm_dv[year(DTM) == 1909]
 
 table(event_1921[, .(start, DTM)]) #Drought Decomposition Matrix
+table(event_1922[, .(start, DTM)]) #Drought Decomposition Matrix
