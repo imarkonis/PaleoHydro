@@ -1,36 +1,74 @@
 source('./source/functions.R'); source('./source/graphics.R') 
 
-load('./results/som/ceu/som_start_year_5_1000_3_events.Rdata')
+load('./results/som/ceu/som_start_end_5_10000_3_events.Rdata')
 
-events_som[slope == 'pos' & cluster != 22]
+cl_ids <- events_som[cluster %in% c(cl_inc, cl_dec), unique(cluster)]
+events_chng <- events_som[cluster %in% cl_ids]
 
-events_som_pos <- melt(events_som[slope == 'pos', .(ID, PT_ID, x = scale(x), y = scale(y), year, dur, start_month, 
-                                       start_p3_month, start_s_month, start_q_month,  p_dv_m, s_dv_m, q_dv_m, cluster)],
-                        id.vars = c('ID', 'PT_ID', 'year','cluster'))
-events_som_neg <- melt(events_som[slope == 'neg', .(ID, PT_ID, x = scale(x), y = scale(y), year, dur, start_month, 
-                                       start_p3_month, start_s_month, start_q_month,  p_dv_m, s_dv_m, q_dv_m, cluster)],
-                        id.vars = c('ID', 'PT_ID', 'year','cluster'))
+cl_23 <- events_som[cluster == 23]
 
-ggplot(events_som_pos, aes(x = variable, y = value, fill = variable)) +
-  geom_boxplot() +
-  scale_fill_manual(values = c('grey60', 'grey60', colset_mid[11:12], var_cols[c(1, 3, 4)], var_cols[c(1, 3, 4)])) +
-  facet_wrap(~cluster, scales = 'free_y') +
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.3)) +
-  theme(strip.background = element_rect(fill = 'grey30')) +
-  theme(strip.text = element_text(colour = 'grey90'))
 
-ggplot(events_som_neg, aes(x = variable, y = value, fill = variable)) +
-  geom_boxplot() +
-  scale_fill_manual(values = c('grey60', 'grey60', colset_mid[11:12], var_cols[c(1, 3, 4)], var_cols[c(1, 3, 4)])) +
-  facet_wrap(~cluster, scales = 'free_y') +
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.3)) +
-  theme(strip.background = element_rect(fill = 'grey30')) +
-  theme(strip.text = element_text(colour = 'grey90'))
+to_plot = rbind(data.table(melt(cl_23[, .(p = p_dv_m, s = s_dv_m, q = q_dv_m)]), cl = factor(23)), 
+                data.table(melt(cl_20[, .(p = p_dv_m, s = s_dv_m, q = q_dv_m)]), cl = factor(20)))
 
-events_som_1 <- events_som[year < mean(year)]
-events_som_2 <- events_som[year > mean(year)]
+to_plot <- to_plot[value > 0]
+ggplot(to_plot, aes(x = value, col = cl)) +
+  geom_density() +
+  facet_free(~variable) +
+  theme_bw()
+
+to_plot <- melt(events_chng[, .(p = p_dv_m, s = s_dv_m, q = q_dv_m, slope, cluster, pet = pet_ev_m)], id.vars = c('slope', 'cluster')) 
+to_plot <- to_plot[value > 0]
+to_plot$slope <- factor(to_plot$slope)
+to_plot$cluster<- factor(to_plot$cluster)
+ggplot(to_plot, aes(x = value, col = slope)) +
+  scale_color_manual(values = c('black', 'red')) +
+  scale_x_continuous(limits = c(0, 5)) +
+  geom_density() +
+  facet_free(~variable) +
+  theme_bw()
+
+
+
+
+
+
+
+
+gg_dur <- ggplot(events_som[n_clusters > 50], aes(x = factor(cluster), fill = factor(dur_cat))) +
+  geom_bar(position = 'stack') +
+  geom_hline(yintercept = 1500, linetype = 2, col = 'grey40') +
+  geom_hline(yintercept = 1000, linetype = 2, col = 'grey40') +
+  geom_hline(yintercept = 500, linetype = 2, col = 'grey40') +
+  scale_fill_manual(values = period_cols) +
+  coord_flip() +
+  theme_bw() +
+  guides(fill = guide_legend(title = "Duration")) +
+  labs(x = 'Cluster', y = 'Size') + 
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), axis.ticks.x = element_blank(), 
+        axis.ticks.y = element_blank()) +
+  facet_wrap(~period, ncol = 3) +
+  theme(strip.background = element_rect(fill = 'grey30', colour = 'grey30')) +
+  theme(strip.text = element_text(colour = 'grey80')) 
+ggsave(paste0(fig_path, fname, '_dur_cat_cls.png'), plot = gg_dur, height = 8, width = 14)
+
+
+
+#Cross-validation
+p3_matrix_start <- events_som[period == '1900-1939' & dur <= 12, table(start_month, dur)]
+p2_matrix_start <- events_som[period == '1940-1978' & dur <= 12, table(start_month, dur)]
+p1_matrix_start <- events_som[period == '1979-2018' & dur <= 12, table(start_month, dur)]
+dur_start_chng <- p3_matrix_start/p2_matrix_start
+
+ggplot(melt(dur_start_chng), aes(factor(start_month), factor(dur))) + 
+  geom_tile(aes(fill = value), colour = "white") +
+  scale_fill_gradient2(low = 'dark blue',
+                       mid = 'grey80',
+                       high = palette_spectral(100)[70],
+                       midpoint = 1) +
+  geom_text(aes(label = round(value, 2))) +
+  theme_bw()
 
 
 #End of winter droughts (veg period ?)
