@@ -1,13 +1,14 @@
 #First script to run
 
 #Folder structure
- dir.create("./data");  dir.create("./data/raw"); dir.create("./results"); #results and data folders are ignored due to size (.gitignore)
- dir.create("./results/figs"); dir.create("./results/figs/2018"); dir.create("./results/figs/distributions")
+dir.create("./data", showWarnings = F);  dir.create("./data/raw", showWarnings = F); dir.create("./results", showWarnings = F); #results and data folders are ignored due to size (.gitignore)
+dir.create("./results/figs", showWarnings = F); dir.create("./results/figs/2018", showWarnings = F); dir.create("./results/figs/distributions", showWarnings = F)
+
 source('./source/functions.R') 
  
 #Data preparation
-dts <- readRDS('./data/raw/stat_rQ20_rs_len0_met_001.Rds') #main analysis dataset
-dtm <- readRDS('./data/raw/mstat_rQ20_rs_len0_met_001.Rds') #main analysis dataset
+dts <- readRDS('./data/raw/stat_rQ20_rs_len0_met_001.rds') #main analysis dataset
+dtm <- readRDS('./data/raw/mstat_rQ20_rs_len0_met_001.rds') #main analysis dataset
 
 e = nc_open('./data/raw/eobs_mask_total2D.nc')
 xc = ncvar_get(e, 'xc')
@@ -31,7 +32,7 @@ dtm[, month := month(DTM)]
 dtm[, PT_ID := .GRP, .(x, y)] #id for each grid cell
 
 #events begin when !is.na(p3 | s | q) 
-# table(dtm[EVE == T]$EID) #EID is not unique for each event - serial number of event at each grid cell (below q20) EID
+#table(dtm[EVE == T]$EID) #EID is not unique for each event - serial number of event at each grid cell (below q20) EID
 dtm[EVE == T & EID > 0, ID := .GRP, .(x, y, EID)] #in this way we have event IDs for each grid box
 dtm[y > 3500000, REG := 'NEU'] #fix for minor discrepancy in labeling
 dtm[EVE == T, start := min(DTM, na.rm = T), ID] 
@@ -43,7 +44,7 @@ dtm[!is.na(s), start_s := min(DTM, na.rm = T), ID]
 dtm[!is.na(q), start_q := min(DTM, na.rm = T), ID]
 dtm[!is.na(p3), start_p3 := min(DTM, na.rm = T), ID]
 setorder(dtm, PT_ID)
-#saveRDS(dtm, './data/mstat_all_met1.Rds') #dataset with all variables that can be used in further analysis
+#saveRDS(dtm, './data/mstat_all_met1.rds') #dataset with all variables that can be used in further analysis
 
 events <- dtm[!is.na(ID) & !is.na(REG), .(REG, PT_ID, x, y, ID, start, start_month, end, end_month, dur, start_s, start_q, start_p3, 
                                           p_dv = p, q_dv = q, s_dv = s, pet_ev = u_pet, t_ev = u_t)] 
@@ -67,17 +68,18 @@ events[is.na(s_dv_m), s_dv_m := 0]
 events[is.na(pet_ev_m), pet_ev_m := 0]
 events[is.na(t_ev_m), t_ev_m := 0]
 #events[, start_diff := unique(month(start_s)) - unique(month(start_q)), ID]
-saveRDS(events, './data/events_met1.Rds') #event information
+saveRDS(events, './data/events_met1.rds') #event information
 
 dtm_short <- dtm[, .(REG, DTM, PT_ID, ID, start, start_month, end, end_month, dur, start_s, start_q, start_p3,
                      p = aP, p3 = aP3, q = aQ, s = aS, t = aT, pet = aPET,
                      p_dv = p, p3_dv = p3, q_dv = q, s_dv = s, t_ev = u_t, pet_ev = u_pet)] 
-saveRDS(dtm_short, './data/mstat_short_met1.Rds') #short version of dtm [for efficiency]
-rm(dtm, dtm_short)
+saveRDS(dtm_short, './data/mstat_short_met1.rds') #short version of dtm [for efficiency]
 
 dtb <- readRDS('./data/raw/rs_met_001.rds')
 dts_sp <- unique(dts[, 1:4])
-dtm_sp <- unique(dtm[, .(x, y, PT_ID)])
+dtm_sp <- unique(dtm[, .(x, y, PT_ID)]) #here a prev. removed variable was called, I just moved the live below
 dtm_sp <- merge(dtm_sp, dts_sp, by = c('x', 'y'))
 
-saveRDS(dtm_sp, file = './data/spatial.Rds') #point IDS, lat/lon and x/y coords
+rm(dtm, dtm_short)
+
+saveRDS(dtm_sp, file = './data/spatial.rds') #point IDS, lat/lon and x/y coords

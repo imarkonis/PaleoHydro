@@ -1,5 +1,6 @@
 library(data.table); library(ggplot2); library(lubridate); library(zoo); library(scales) 
 library(ncdf4); library(doSNOW); library(reshape2)
+
 get.periods <- function(dataset, eve, pre, aft){
   events <- unique(eve[, .(PT_ID, start, dur, event = year(start))])
   events[, start_pre := start - months(pre)]
