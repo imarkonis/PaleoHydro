@@ -2,6 +2,40 @@ source('./source/functions.R'); source('./source/graphics.R')
 
 load('./results/som/ceu/som_start_end_5_10000_3_events.Rdata')
 
+###Cluster composition fraction per year
+cluster_comp <- events_som[, .(year, ID, cluster)]
+cluster_comp[, sum_cls_yr := .N, year]
+cluster_comp <- unique(cluster_comp[, .(.N, .N/sum_cls_yr), .(cluster, year)])
+setnames(cluster_comp, 'V2', 'fraction')
+setorder(cluster_comp, year, -N)
+cluster_comp[, fraction := cumsum(fraction), year]
+cluster_comp[, n_rank := rank(-N, ties.method = "first"), year]
+ggplot(cluster_comp, aes(factor(n_rank), y = fraction, group = n_rank)) +
+  geom_boxplot(fill = period_cols[c(rep(3, 3), rep(2, 3), rep(1, 19))]) +
+  coord_cartesian(xlim = c(0, 10)) +
+  labs(x = 'Rank', y = 'Cumulative fraction') +
+  theme_bw()
+ggsave("./results/figs/som/composition_cum.png", width = 5, height = 3)
+
+cluster_comp_sum <- cluster_comp
+cluster_comp_sum[n_rank <= 3, top_2_sum := max(fraction), year]
+cluster_comp_sum[n_rank > 3 & n_rank <= 6, mid_24_sum := max(fraction, na.rm = T), year]
+to_plot <-  merge(unique(cluster_comp_sum[, .(year, top_2_sum)]), unique(cluster_comp_sum[, .(year, mid_24_sum)]), by = 'year')
+to_plot <- to_plot[complete.cases(to_plot)]
+to_plot$bot_4_sum <- 1 - to_plot$mid_24_sum
+to_plot[, mid_24_sum := mid_24_sum - top_2_sum]
+to_plot <- to_plot[complete.cases(to_plot)]
+to_plot <- melt(to_plot, id.vars = 'year')
+to_plot[, variable := factor(variable, levels = c('bot_4_sum', 'mid_24_sum', 'top_2_sum'), 
+                             labels = c('ranks 7-25', 'ranks 4-6', 'ranks 1-3'))]
+
+ggplot(to_plot, aes(year, y = value, fill = variable)) +
+  geom_bar(position = 'stack', stat = 'identity', col = 'black') +
+  theme_bw() +
+  labs(x = 'Year', y = 'cumulative fraction') +
+  scale_fill_manual(values = period_cols)
+ggsave("./results/figs/som/composition_year.png", width = 8, height = 4)
+
 #Start
 gg_start <- ggplot(events_som[n_clusters > 500], aes(x = factor(cluster), fill = factor(start_month))) +
   geom_bar(position = 'stack') +
@@ -90,10 +124,12 @@ ggsave(paste0(fig_path, fname, '_cls_sum.png'), plot =gg_all, height = 20, width
 ####################################################################
 
 #trends
+n_cls_yr[, nndist_ranks := cut(nndist_m, c(-0.5, -0.4, -0.3, -0.2, 0, 1), labels = 1:5)]
 gg_slopes <- ggplot(n_cls_yr[cluster %in% c(cl_inc, cl_dec)], aes(x = year, y = N)) +
-  geom_bar(stat = 'identity', fill = 'grey20') +
+  geom_bar(stat = 'identity', aes(fill = nndist_ranks)) +
   geom_smooth(se = F, method = "lm", col = colset_mid[11]) +
   scale_color_manual(values = colset_mid[c(1:2, 4:5, 8:11, 6:7, 12, 3)]) +
+  scale_fill_manual(values = palette_mid(5)) +
   scale_linetype_manual(values = rep(1:5, 5)) +  
   facet_wrap(~cluster, scales = 'free_y') +
   theme_bw() + 
@@ -329,12 +365,6 @@ ggplot(to_plot, aes(x = value, col = slope)) +
   geom_density() +
   facet_free(~variable) +
   theme_bw()
-
-
-
-
-
-
 
 
 gg_dur <- ggplot(events_som[n_clusters > 50], aes(x = factor(cluster), fill = factor(dur_cat))) +
