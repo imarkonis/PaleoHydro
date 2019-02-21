@@ -33,12 +33,13 @@ to_plot <- timeseries_all[, .N, .(month = month(DTM),
                                   period, 
                                   variable = factor(variable),
                                   region = REG)]
-to_plot[, mean_N := as.integer(mean(N)), period]
+to_plot[, mean_N := as.integer(mean(N)), .(period, variable)]
 
 gg_change <- ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   geom_point() + 
   geom_line() +
-  geom_rug(y = mean_N, sides = "rl") +
+  geom_rug(aes(x = month, y = mean_N, col = variable), sides = "rl", size = 2) +
+  geom_line(aes(x = month, y = mean_N, col = variable), size = 2, alpha = 0.3) +
   scale_color_manual(values = var_cols[c(1:3, 5)], labels = c('P', "Q", 'SM', 'PET')) +
   scale_x_continuous(breaks = 1:12) +
   facet_wrap(region ~ period) +
