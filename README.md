@@ -16,8 +16,7 @@ After forking the repo, run `init.R` to create directory structure and clean dat
 
 `build_som_2018.R` similar to previous but only for the first 7 months of year (2018 comparison).
 
-`som_analysis.R` 
-
+`som_analysis.R` analysis of the classification results. 
 
 
 ### Variables names 
