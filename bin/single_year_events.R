@@ -1,13 +1,15 @@
 #Detect and classify the events (within a single year)
 
 source('./source/functions.R'); source('./source/graphics.R')
-dta <- readRDS('./data/mstat_nvars.Rds')
+dta <- readRDS('./data/mstat_short_met1.Rds')
 dta_CEU <- dta[REG == 'CEU']
+dta_CEU[, yr := year(DTM)]
 
 #The vegetation period droughts, JJA (strictly 3 months of drought during summer)
-veg_dr <- dta_CEU[start_month == 6 & dur == 3]
+veg_dr <- dta_CEU[month(start) == 6 & dur == 3]
+
 veg_dr_yr <- merge(unique(veg_dr[, .(PT_ID, yr)]), dta) #adding the rest of the year for each event
-saveRDS(veg_dr, file = './data/veg_droughts_3_strict.Rds')
+#saveRDS(veg_dr, file = './data/veg_droughts_3_strict.Rds')
 
 to_plot <- unique(veg_dr[, .(PT_ID, yr)]) #investigation of temporal evolution
 to_plot[, area := .N, yr]  

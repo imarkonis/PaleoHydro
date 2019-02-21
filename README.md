@@ -6,15 +6,19 @@ After forking the repo, run `init.R` to create directory structure and clean dat
 
 `data_prep` creates and changes variable names (see *Variable names* below). Determines drought events.
 
-`plot_cumulative.R` examples for plotting the cumulative sums and normalised deficit volumes of a single or median of multiple grid cells. The resulting comparison scripts can be found in `bin/2018`. However this approach is problematic since the cumulative sum of deficit volumes has no real physical meaning. The cumulative sum of the original values should be used. 
+`space_aid.R` helps to determine the location of a given `PT_ID`.
 
-`event_properties.R` on-going investigation of potential changes in the properties drought events.
+`plot_cumulative.R` examples for plotting the cumulative sums and deficit volumes of a single or median of multiple grid cells for drought events and a certain period before/after. 
 
-`som.R` application of self-organizing map algorithm.
+`single_year_events.R` older approach; compares the grid cell distributions (as in `results/figs/distributions`) for vegetation period droughts. (there is some bug to fix). 
 
-An older approach can be found in `single_year_events.R`, with density plots for the preconditions of different single-year events.
+`build_som.R` application of self-organizing map algorithm.
 
-The location of `PT_ID` can be found in `space_aid.R`.
+`build_som_2018.R` similar to previous but only for the first 7 months of year (2018 comparison).
+
+`som_analysis.R` 
+
+
 
 ### Variables names 
 

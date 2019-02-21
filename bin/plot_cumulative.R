@@ -37,7 +37,7 @@ test_events <- foreach(i = 1:nrow(event_dur), .combine = 'rbind') %do% {
 }
 
 test_events_cumsum <- foreach(i = 1:nrow(event_dur), .combine = 'rbind') %do% {
-  test_events[DTM >= event_dur$start[i] & DTM <= event_dur$end[i], .(DTM, cumsum = cumsum(value_z_30)), variable]
+  test_events[DTM >= event_dur$start[i] & DTM <= event_dur$end[i], .(DTM, cumsum = cumsum(value_anom_30)), variable]
 }
 
 test_events_cumsum <- merge(test_events_cumsum, event_dur_seq, by='DTM', allow.cartesian = T)

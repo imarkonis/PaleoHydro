@@ -1,4 +1,5 @@
 #Application of SOMs to find event clusters using only the first 7 months of year (2018 comparison)
+
 library(kohonen); library(tidyverse)
 source('./source/functions.R'); source('./source/graphics.R') 
 
