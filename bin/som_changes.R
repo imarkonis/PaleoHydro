@@ -33,15 +33,15 @@ to_plot <- timeseries_all[, .N, .(month = month(DTM),
                                   period, 
                                   variable = factor(variable),
                                   region = REG)]
-to_plot[variable == 'p_dv', N := as.integer(mean(N)), period]
-to_plot[variable == 'q_dv', N := as.integer(mean(N)), period]
+to_plot[, mean_N := as.integer(mean(N)), period]
 
 gg_change <- ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   geom_point() + 
   geom_line() +
+  geom_rug(y = mean_N, sides = "rl") +
   scale_color_manual(values = var_cols[c(1:3, 5)], labels = c('P', "Q", 'SM', 'PET')) +
   scale_x_continuous(breaks = 1:12) +
-  facet_wrap(region~period) +
+  facet_wrap(region ~ period) +
   labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Counts') +
   theme_bw() +
   theme(strip.background = element_rect(fill = var_cols[1])) +

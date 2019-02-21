@@ -18,6 +18,7 @@ After forking the repo, run `init.R` to create directory structure and clean dat
 
 `som_analysis.R` analysis of the classification results. 
 
+`som_changes.R` presentation of the most significant changes in clusters during the last 100 years. 
 
 ### Variables names 
 
