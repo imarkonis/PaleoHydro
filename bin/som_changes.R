@@ -15,7 +15,7 @@ results_path <- './results/som/med/'
 load(paste0(results_path, filename)) 
 events_med <- events_som
 events_som <-rbind(events_neu, events_ceu, events_med)
-aa <- unique(events[, .(ID, period, dur_cat, REG, p3_dur_tot, s_dur_tot, q_dur_tot)])
+aa <- unique(events[, .(ID, REG, p3_dur_tot, s_dur_tot, q_dur_tot)])
 events_som <- aa[events_som, on = 'ID']
 events_som[, cluster := paste0(REG, '_SOM_', cluster)]
 events_som[, hclust := paste0(REG, '_', hclust)]
@@ -33,7 +33,7 @@ to_plot <- timeseries_all[, .N, .(month = month(DTM),
                                   period, 
                                   variable = factor(variable),
                                   region = REG)]
-to_plot[, mean_N := as.integer(mean(N)), .(period, variable)]
+to_plot[, mean_N := as.integer(mean(N)), .(period, variable, region)]
 
 gg_change <- ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   geom_point() + 
@@ -43,7 +43,7 @@ gg_change <- ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   scale_color_manual(values = var_cols[c(1:3, 5)], labels = c('P', "Q", 'SM', 'PET')) +
   scale_x_continuous(breaks = 1:12) +
   facet_wrap(region ~ period) +
-  labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Counts') +
+  labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Grid cells') +
   theme_bw() +
   theme(strip.background = element_rect(fill = var_cols[1])) +
   theme(strip.text = element_text(colour = 'white')) + 
@@ -71,28 +71,49 @@ hcls_slopes_tab <- unique(events_som[, .(hclust, hcl_slope)])
 hcls_slopes_tab[hcl_slope < -0.05]
 hcls_slopes_tab[hcl_slope > 0.05]
 
-to_plot$cluster = factor(to_plot$cluster, levels=c('CEU_1', 'CEU_8', 'CEU_4', 'MED_7', 'MED_3', 'MED_8', 'NEU_3', 'NEU_6', 'NEU_5', 'NEU_2'  ))
+to_plot$cluster = factor(to_plot$cluster, levels=c('CEU_1', 'CEU_8', 'CEU_4', 
+                                                   'MED_7', 'MED_3', 'MED_8', 
+                                                   'NEU_3', 'NEU_6', 'NEU_2'))
+
+plot_labeller <- function(variable, value){
+  return(var_names[value])
+}
+
+var_names <- list(
+  'CEU_1' = "Summer CEU",
+  'CEU_8' = "Autumn CEU",
+  'CEU_4' = "Winter CEU",
+  'MED_7' = "Summer MED",
+  'MED_3' = "Autumn MED",
+  'MED_8' = "Winter MED",
+  'NEU_3' = "Summer NEU",
+  'NEU_6' = "Autumn NEU",
+  'NEU_2' = "Winter NEU")
+
 g <- ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   geom_point() + 
   geom_line() +
   scale_color_manual(values = var_cols[c(1:3, 5)], labels = c('P', "Q", 'SM', 'PET')) +
   scale_x_continuous(breaks = 1:12) +
-  facet_wrap(~cluster, ncol = 3) +
-  labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Counts') +
+  facet_wrap(~cluster, ncol = 3, labeller = plot_labeller) +
+  labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Grid cells') +
   theme_bw() +
   theme(strip.background = element_rect(fill = var_cols[1])) +
-  theme(strip.text = element_text(colour = 'white')) + 
-  theme_opts
+  theme_opts  
 
 g <- ggplot_gtable(ggplot_build(g))  #Change facet colors
-stripr <- which(grepl('strip', g$layout$name))
-fills <- c(var_cols[5], var_cols[1], var_cols[1], var_cols[4], var_cols[5], var_cols[1], var_cols[4], var_cols[5],var_cols[1])
-k <- 1
-for (i in stripr) {
-  j <- which(grepl('rect', g$grobs[[i]]$grobs[[1]]$childrenOrder))
-  g$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
-  k <- k+1
+strips <- which(grepl('strip-', g$layout$name))
+pal <- c(var_cols[5], var_cols[1], var_cols[1], var_cols[4], var_cols[5], 
+         var_cols[1], var_cols[4], var_cols[5],var_cols[1])
+cols <- c( 'black','white', 'white', 'white', 'black', 'white',  'white', 'black', 'white') 
+
+for (i in seq_along(strips)) {
+  k <- which(grepl('rect', g$grobs[[strips[i]]]$grobs[[1]]$childrenOrder))
+  l <- which(grepl('titleGrob', g$grobs[[strips[i]]]$grobs[[1]]$childrenOrder))
+  g$grobs[[strips[i]]]$grobs[[1]]$children[[k]]$gp$fill <- pal[i]
+  g$grobs[[strips[i]]]$grobs[[1]]$children[[l]]$children[[1]]$gp$col <- cols[i]
 }
+
 png('./results/figs/hcl_change.png', height = 15, width = 22, units = 'cm', res = 320)
 grid::grid.draw(g)
 dev.off()
@@ -115,7 +136,7 @@ ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   scale_color_manual(values = var_cols[c(1:3, 5)], labels = c('P', "Q", 'SM', 'PET')) +
   scale_x_continuous(breaks = 1:12) +
   facet_wrap(~cluster, ncol = 3) +
-  labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Counts') +
+  labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Grid cells') +
   theme_bw() +
   theme(strip.background = element_rect(fill = var_cols[1])) +
   theme(strip.text = element_text(colour = 'white')) + 
@@ -139,11 +160,41 @@ ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   scale_color_manual(values = var_cols[c(1:3, 5)], labels = c('P', "Q", 'SM', 'PET')) +
   scale_x_continuous(breaks = 1:12) +
   facet_wrap(~cluster, ncol = 3) +
-  labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Counts') +
+  labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Grid cells') +
   theme_bw() +
   theme(strip.background = element_rect(fill = var_cols[1])) +
   theme(strip.text = element_text(colour = 'white')) + 
   theme_opts
+
+#The heat-wave flash droughts in NEU
+aa <- unique(events_som[hclust %in% c('NEU_3', 'NEU_6') & n_clusters > 1000, .(ID, period, hclust, cluster, REG)])
+timeseries_all <- aa[timeseries, on = 'ID']
+timeseries_all <- timeseries_all[complete.cases(timeseries_all)]
+
+to_plot <- timeseries_all[cluster == "NEU_SOM_9" | cluster == "NEU_SOM_10" | 
+                          cluster == "NEU_SOM_12" | cluster == "NEU_SOM_14", .N, .(
+  month = month(DTM),
+  cluster = factor(cluster),
+  variable = factor(variable),
+  region = REG
+)]
+
+to_plot[, cluster := factor(cluster, levels = c('NEU_SOM_9', 'NEU_SOM_10',
+                            'NEU_SOM_12', 'NEU_SOM_14'))]
+
+ggplot(to_plot, aes(x = month, y = N, col = variable)) +
+  geom_point() + 
+  geom_line() +
+  scale_color_manual(values = var_cols[c(1:3, 5)], labels = c('P', "Q", 'SM', 'PET')) +
+  scale_x_continuous(breaks = 1:12) +
+  facet_wrap(~cluster, ncol = 2) +
+  labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Grid cells') +
+  theme_bw() +
+  theme(strip.background = element_rect(fill = var_cols[1])) +
+  theme(strip.text = element_text(colour = 'white')) + 
+  theme_opts
+
+ggsave(paste0('./results/figs/NEU_flash_droughts.png'), height = 5, width = 6)
 
 ###Flash drought type composition
 to_plot <- melt(events_som[slope == 'pos' & n_clusters > 1000 & 
@@ -157,6 +208,8 @@ to_plot_2$value <- 1 - to_plot$value
 to_plot_2$drought <- factor(paste0(to_plot$variable, '_no_dr'))
 to_plot$drought <- factor(paste0(to_plot$variable, '_dr'))
 to_plot <- rbind(to_plot, to_plot_2)
+to_plot$hclust <- factor(to_plot$hclust)
+levels(to_plot$hclust) <- c("CEU", "MED", "NEU")
 
 g1 <- ggplot(data = as.data.table(to_plot), aes(x = variable, y = value, fill = drought)) +
   geom_bar(stat = "identity", position = position_fill(), width = 1, color = 'grey20') +
@@ -165,7 +218,7 @@ g1 <- ggplot(data = as.data.table(to_plot), aes(x = variable, y = value, fill = 
   scale_fill_manual(values = c(var_cols[1:3], var_cols_alpha), breaks = c("Met.", "Hyd.", "Agr.")) +
   theme_void() +
   theme(aspect.ratio = 1) +
-  theme(strip.text.x = element_blank()) +
+#  theme(strip.text.x = element_blank()) +
   guides(fill = guide_legend(title = "Drought Type"))
 
 to_plot <- melt(events_som[slope == 'neg' & n_clusters > 1000 & 
@@ -181,6 +234,7 @@ to_plot$drought <- factor(paste0(to_plot$variable, '_dr'))
 to_plot <- rbind(to_plot, to_plot_2)
 to_plot$hclust <- factor(to_plot$hclust)
 levels(to_plot$hclust) <- c("CEU", "MED", "NEU")
+
 g2 <- ggplot(data = as.data.table(to_plot), aes(x = variable, y = value, fill = factor(drought))) +
   geom_bar(stat = "identity", position = position_fill(), width = 1, color = 'grey20') +
   facet_wrap(~hclust, nrow = 1) +
@@ -203,7 +257,7 @@ to_plot <- to_plot[value > 0]
 to_plot$hclust<- factor(to_plot$hclust)
 levels(to_plot$hclust) <- c("CEU", "MED", "NEU")
 
-g1 <- ggplot(to_plot[slope == 'neg' & n_clusters > 1000], aes(x = variable, y = value, fill = variable)) +
+g3 <- ggplot(to_plot[slope == 'neg' & n_clusters > 1000], aes(x = variable, y = value, fill = variable)) +
   geom_boxplot(outlier.colour = NA) + 
   scale_y_continuous(limits = c(0, 3)) +
   geom_hline(yintercept = 1, linetype = 2, col = 'grey30') +
@@ -215,7 +269,7 @@ g1 <- ggplot(to_plot[slope == 'neg' & n_clusters > 1000], aes(x = variable, y = 
   theme(strip.background = element_rect(fill = 'grey30', colour = 'grey30')) +
   theme(strip.text = element_text(colour = 'grey80'))  
 
-g2 <- ggplot(to_plot[slope == 'pos' & n_clusters > 1000], aes(x = variable, y = value, fill = variable)) +
+g4 <- ggplot(to_plot[slope == 'pos' & n_clusters > 1000], aes(x = variable, y = value, fill = variable)) +
   geom_boxplot(outlier.colour = NA) + 
   scale_y_continuous(limits = c(0, 3)) +
   geom_hline(yintercept = 1, linetype = 2, col = 'grey30') +
@@ -227,8 +281,14 @@ g2 <- ggplot(to_plot[slope == 'pos' & n_clusters > 1000], aes(x = variable, y = 
   theme(strip.background = element_rect(fill = 'grey30', colour = 'grey30')) +
   theme(strip.text = element_text(colour = 'grey80'))  
 
-gg_all <- ggarrange(g1, g2,  labels = c("a", "b"), common.legend = T, legend = 'right', nrow = 2, ncol = 1)
+gg_all <- ggarrange(g3, g4,  labels = c("a", "b"), common.legend = T, legend = 'right', nrow = 2, ncol = 1)
 ggsave('./results/figs/flash_dr_intensity.png', plot = gg_all, height = 6, width = 5)
+
+gg_all <- ggarrange(g2, g3, g1, g4, 
+                    labels = c("a", "c", "b", "d"), 
+                    common.legend = T, legend = 'right', 
+                    nrow = 2, ncol = 2)
+ggsave('./results/figs/flash_dr.png', plot = gg_all, height = 5, width = 8)
 
 #Flash droughts
 to_plot <- timeseries_all[dur_cat == '3-6', .N, .(month = month(DTM), 
@@ -243,7 +303,7 @@ ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   scale_color_manual(values = var_cols[c(1:3, 5)], labels = c('P', "Q", 'SM', 'PET')) +
   scale_x_continuous(breaks = 1:12) +
   facet_wrap(region~cluster) +
-  labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Counts') +
+  labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Grid cells') +
   theme_bw() +
   theme(strip.background = element_rect(fill = var_cols[1])) +
   theme(strip.text = element_text(colour = 'white')) + 

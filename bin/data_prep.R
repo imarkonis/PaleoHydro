@@ -45,6 +45,7 @@ dtm[EVE == T, end := max(DTM, na.rm = T), ID]
 dtm[!is.na(p3), start_p3 := min(DTM, na.rm = T), ID]
 dtm[!is.na(q), start_q := min(DTM, na.rm = T), ID]
 dtm[!is.na(s), start_s := min(DTM, na.rm = T), ID]
+dtm[!is.na(u_pet), start_pet := min(DTM, na.rm = T), ID]
 dtm[!is.na(p_ID), p3_dur := .N, p_ID] 
 dtm[is.na(p3_dur), p3_dur := 0]
 dtm[!is.na(q_ID), q_dur := .N, q_ID] 
@@ -55,7 +56,7 @@ saveRDS(dtm, './data/mstat_all_met1.Rds') #dataset with all variables with OLD N
 #Determine events
 events <- unique(dtm[!is.na(ID) & !is.na(REG), .(REG, PT_ID, ID, p_ID, q_ID, s_ID, 
                                                  start, dur, end, 
-                                                 start_p3, start_q, start_s,
+                                                 start_p3, start_q, start_s, start_pet,
                                                  p3_dur, q_dur, s_dur,
                                                  p_dv_m = mean(p, na.rm = T), 
                                                  q_dv_m = mean(q, na.rm = T), 
@@ -66,14 +67,15 @@ events <- unique(dtm[!is.na(ID) & !is.na(REG), .(REG, PT_ID, ID, p_ID, q_ID, s_I
 events[, start_p3 := max(start_p3, na.rm = T), ID]
 events[, start_q := max(start_q, na.rm = T), ID]
 events[, start_s := max(start_s, na.rm = T), ID]
+events[, start_pet := max(start_pet, na.rm = T), ID]
 
 aa <- unique(events[, .(ID, p3_dur), p_ID])   #The total duration of each drought type during the drougth event
 aa <- aa[, .(p3_dur_tot = sum(p3_dur)), ID]
 events <- events[aa, on = 'ID']
 
-aa_1 <- unique(events[ID < 35000, .(ID, q_dur), q_ID])  #some bug that cannot find or explain
-aa_2 <- unique(events[ID > 35000 & ID <= 55000, .(ID, q_dur), q_ID])
-aa_3 <- unique(events[ID > 55000, .(ID, q_dur), q_ID])
+aa_1 <- unique(events[ID < 20000, .(ID, q_dur), q_ID])  #some bug that cannot find or explain
+aa_2 <- unique(events[ID > 20000 & ID <= 35000, .(ID, q_dur), q_ID])
+aa_3 <- unique(events[ID > 35000, .(ID, q_dur), q_ID])
 aa <- rbind(aa_1, aa_2, aa_3)
 aa <- aa[, .(q_dur_tot = sum(q_dur)), ID]
 events <- events[aa, on = 'ID']

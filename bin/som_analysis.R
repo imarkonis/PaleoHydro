@@ -1,6 +1,6 @@
 source('./source/functions.R'); source('./source/graphics.R') 
-
-load('./results/som/ceu/som_start_end_5_10000_3_events.Rdata')
+library(dplyr)
+load('./results/som/neu/som_start_end_5_10000_3_events.Rdata')
 
 ###Cluster composition fraction per year
 cluster_comp <- events_som[, .(year, ID, cluster)]
