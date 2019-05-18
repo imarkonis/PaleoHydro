@@ -124,9 +124,8 @@ ggsave(paste0(fig_path, fname, '_cls_sum.png'), plot =gg_all, height = 20, width
 ####################################################################
 
 #trends
-n_cls_yr[, nndist_ranks := cut(nndist_m, c(-0.5, -0.4, -0.3, -0.2, 0, 1), labels = 1:5)]
 gg_slopes <- ggplot(n_cls_yr[cluster %in% c(cl_inc, cl_dec)], aes(x = year, y = N)) +
-  geom_bar(stat = 'identity', aes(fill = nndist_ranks)) +
+  geom_bar(stat = 'identity') +
   geom_smooth(se = F, method = "lm", col = colset_mid[11]) +
   scale_color_manual(values = colset_mid[c(1:2, 4:5, 8:11, 6:7, 12, 3)]) +
   scale_fill_manual(values = palette_mid(5)) +

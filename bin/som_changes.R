@@ -5,6 +5,7 @@ source('./source/functions.R'); source('./source/graphics.R');
 dta <- readRDS('./data/timeseries_met1.Rds')
 events <- readRDS('./data/events_met1.Rds')
 filename <- 'som_start_end_5_10000_3_events.Rdata'
+fig_path <- './results/figs/'
 results_path <- './results/som/ceu/'
 load(paste0(results_path, filename)) 
 events_ceu <- events_som
@@ -20,6 +21,7 @@ events_som <- aa[events_som, on = 'ID']
 events_som[, cluster := paste0(REG, '_SOM_', cluster)]
 events_som[, hclust := paste0(REG, '_', hclust)]
 saveRDS(events_som, './data/events_som.Rds')
+events_som <- readRDS('./data/events_som.Rds')
 
 timeseries <- dta[, .(PT_ID, DTM, ID, p_dv, q_dv, s_dv, pet_ev)]
 timeseries <- melt(timeseries, id.vars = c('PT_ID', 'DTM', 'ID'))
@@ -71,26 +73,28 @@ hcls_slopes_tab <- unique(events_som[, .(hclust, hcl_slope)])
 hcls_slopes_tab[hcl_slope < -0.05]
 hcls_slopes_tab[hcl_slope > 0.05]
 
-to_plot$cluster = factor(to_plot$cluster, levels=c('CEU_1', 'CEU_8', 'CEU_4', 
-                                                   'MED_7', 'MED_3', 'MED_8', 
-                                                   'NEU_3', 'NEU_6', 'NEU_2'))
+sig_clusters <- c('CEU_1', 'CEU_8', 'CEU_4', 
+  'MED_7', 'MED_3', 'MED_8', 
+  'NEU_3', 'NEU_6', 'NEU_2')
+
+to_plot$cluster = factor(to_plot$cluster, levels = sig_clusters)
 
 plot_labeller <- function(variable, value){
   return(var_names[value])
 }
 
 var_names <- list(
-  'CEU_1' = "Summer CEU",
-  'CEU_8' = "Autumn CEU",
-  'CEU_4' = "Winter CEU",
-  'MED_7' = "Summer MED",
-  'MED_3' = "Autumn MED",
-  'MED_8' = "Winter MED",
-  'NEU_3' = "Summer NEU",
-  'NEU_6' = "Autumn NEU",
-  'NEU_2' = "Winter NEU")
+  'CEU_1' = "Class A-CEU",
+  'CEU_8' = "Class B-CEU",
+  'CEU_4' = "Class C-CEU",
+  'MED_7' = "Class A-MED",
+  'MED_3' = "Class B-MED",
+  'MED_8' = "Class C-MED",
+  'NEU_3' = "Class A-NEU",
+  'NEU_6' = "Class B-NEU",
+  'NEU_2' = "Class C-NEU")
 
-g <- ggplot(to_plot, aes(x = month, y = N, col = variable)) +
+g1 <- ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   geom_point() + 
   geom_line() +
   scale_color_manual(values = var_cols[c(1:3, 5)], labels = c('P', "Q", 'SM', 'PET')) +
@@ -99,8 +103,10 @@ g <- ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   labs(color = 'Def./Exc. Volume', x = 'Month', y = 'Grid cells') +
   theme_bw() +
   theme(strip.background = element_rect(fill = var_cols[1])) +
+  theme(strip.text = element_text(colour = 'white')) + 
   theme_opts  
 
+#Not used in final plot--------------------------
 g <- ggplot_gtable(ggplot_build(g))  #Change facet colors
 strips <- which(grepl('strip-', g$layout$name))
 pal <- c(var_cols[5], var_cols[1], var_cols[1], var_cols[4], var_cols[5], 
@@ -117,6 +123,37 @@ for (i in seq_along(strips)) {
 png('./results/figs/hcl_change.png', height = 15, width = 22, units = 'cm', res = 320)
 grid::grid.draw(g)
 dev.off()
+#--------------------------------------------------
+
+#slopes
+
+to_plot <- events_som[hclust %in% sig_clusters, .(year, ID, hclust)]
+to_plot$hclust = factor(to_plot$hclust, levels = sig_clusters)
+to_plot[, N := .N, .(year, hclust)]
+to_plot <- to_plot[complete.cases(to_plot)]
+to_plot[, ID := NULL]
+to_plot <- unique(to_plot)
+
+g2 <- ggplot(to_plot, aes(x = as.numeric(year), y = N)) +
+  geom_bar(stat="identity", fill = 'grey40') +
+  geom_line(stat="smooth", method = "lm", col = 'dark orange', lwd = 1) +
+  geom_smooth(data = to_plot[year >= 1960], se = F, method = "lm", col = colset_mid[11]) +
+  scale_color_manual(values = colset_mid[c(1:2, 4:5, 8:11, 6:7, 12, 3)]) +
+  scale_fill_manual(values = palette_mid(5)) +
+  scale_linetype_manual(values = rep(1:5, 5)) +  
+  facet_wrap(~hclust, labeller = plot_labeller) +
+  theme_bw() + 
+  labs(x = "Year", y = "Drought events") +
+  theme(strip.background = element_rect(fill = 'grey30', colour = 'grey30')) +
+  theme(strip.text = element_text(colour = 'grey80')) +
+  theme_opts  
+
+gg_all <- ggarrange(g1,
+                    g2,  labels = c("a", "b"), 
+                    common.legend = T, legend = 'right', 
+                    nrow = 1, ncol = 2)
+ggsave(paste0('./results/figs/classes.png'), plot = gg_all, height = 6, width = 12)
+
 
 #The heat-wave flash droughts in detail
 aa <- unique(events_som[hclust %in% c('CEU_1', 'CEU_8', 'MED_7', 'MED_3', 'NEU_3', 'NEU_6') & slope == 'pos' & n_clusters > 1000, .(ID, period, hclust, cluster, REG)])

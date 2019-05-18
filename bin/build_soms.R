@@ -11,13 +11,16 @@ dr_dur <- 3
 month_trans <- function(x) (sin(2 * pi * x/12)) #this tranformation is necessary for SOMs to describe the circularity in months
 
 events_for_som <- events[REG == 'CEU' & dur >= dr_dur & year(start) >= 1900, #set region here
-                         .(ID, dur, start_month, end_month, x, y, year = year(start),
-                           start_p3_month = month(start_p3), start_s_month = month(start_s), start_q_month = month(start_q),  
+                         .(ID, dur, year = year(start),
+                           end_month = month(end),
+                           start_p3_month = month(start_p3), 
+                           start_s_month = month(start_s), 
+                           start_q_month = month(start_q),  
                            p_dv_m, pet_ev_m, s_dv_m, q_dv_m)]
 events_for_som[is.na(start_p3_month), start_p3_month := 0]
 events_for_som[is.na(start_q_month), start_q_month := 0]
 events_for_som[is.na(start_s_month), start_s_month := 0]
-
+events_for_som <- unique(events_for_som)
 som_grid <- somgrid(xdim = map_dimension, 
                     ydim = map_dimension, 
                     topo = "hexagonal")
@@ -48,7 +51,7 @@ if(recalculate_map == F & file.exists(path_name) == T){
 }
 
 # generate distance matrix for codes
-#groups = 20
+#groups = 8
 #som_hc <- cutree(hclust(dist(m$codes[[1]])), groups)
 #plot(m, type="mapping", main = "Cluster Map", bgcol = palette_mid_qual(groups)[som_hc])
 #add.cluster.boundaries(m, som_hc)
@@ -56,7 +59,7 @@ if(recalculate_map == F & file.exists(path_name) == T){
 #events_for_som$cluster <- melt(som_hc[m$unit.classif])[, 1]
 
 events_for_som$cluster <- m$unit.classif #no clustering -> all soms used
-events_for_som[, n_clusters := .N, by = cluster]
+#events_for_som[, n_clusters := .N, by = cluster]
 events_som <- events[, .(start, ID, PT_ID, x, y, start_p3, start_q, start_s)][events_for_som, on = 'ID']
 events_som[, n_cells := .N, by = year(start)]
 

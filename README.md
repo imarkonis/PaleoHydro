@@ -22,7 +22,7 @@ After forking the repo, run `init.R` to create directory structure and clean dat
 
 ### Variables names 
 
-In file `mstat_rQ20_rs_len0_met_001.Rds` the following notation is uesd:
+In file `mstat_rQ20_rs_len0_met_001.Rds` the following notation is used:
 
 `p`, `p3`, `q`, `s` are the deficit volumes for precip, 3-month precip, runoff and soil moisture, 
 
