@@ -1,5 +1,5 @@
 #Application of SOMs to find event clusters 
-library(kohonen); library(tidyverse)
+library(kohonen); library(tidyverse);
 source('./source/functions.R'); source('./source/graphics.R') 
 
 events <- readRDS('./data/events_met1.Rds') #created in init.R
@@ -11,11 +11,8 @@ dr_dur <- 3
 month_trans <- function(x) (sin(2 * pi * x/12)) #this tranformation is necessary for SOMs to describe the circularity in months
 
 events_for_som <- events[REG == 'CEU' & dur >= dr_dur & year(start) >= 1900, #set region here
-                         .(ID, dur, year = year(start),
-                           end_month = month(end),
-                           start_p3_month = month(start_p3), 
-                           start_s_month = month(start_s), 
-                           start_q_month = month(start_q),  
+                         .(ID, dur, start_month = month(start), end_month = month(end), PT_ID, year = year(start),
+                           start_p3_month = month(start_p3), start_s_month = month(start_s), start_q_month = month(start_q),  
                            p_dv_m, pet_ev_m, s_dv_m, q_dv_m)]
 events_for_som[is.na(start_p3_month), start_p3_month := 0]
 events_for_som[is.na(start_q_month), start_q_month := 0]
@@ -51,23 +48,24 @@ if(recalculate_map == F & file.exists(path_name) == T){
 }
 
 # generate distance matrix for codes
-#groups = 8
-#som_hc <- cutree(hclust(dist(m$codes[[1]])), groups)
+groups = 8
+som_hc <- cutree(hclust(dist(m$codes[[1]])), groups)
 #plot(m, type="mapping", main = "Cluster Map", bgcol = palette_mid_qual(groups)[som_hc])
 #add.cluster.boundaries(m, som_hc)
 #cls = som_hc[m$unit.classif]
-#events_for_som$cluster <- melt(som_hc[m$unit.classif])[, 1]
+events_for_som$cluster <- melt(som_hc[m$unit.classif])[, 1]
 
 events_for_som$cluster <- m$unit.classif #no clustering -> all soms used
-#events_for_som[, n_clusters := .N, by = cluster]
-events_som <- events[, .(start, ID, PT_ID, x, y, start_p3, start_q, start_s)][events_for_som, on = 'ID']
+events_for_som[, n_clusters := .N, by = cluster]
+events_som <- unique(events[, .(start, ID, PT_ID, start_p3, start_q, start_s)])
+events_som <- events_som[events_for_som, on = c('ID', 'PT_ID')]
 events_som[, n_cells := .N, by = year(start)]
 
 som_sum <- events_som[, lapply(.SD, median, na.rm = T), by = cluster]
 som_sum <- round(som_sum, 2)
 som_sum
 
-events_som_melt <- melt(events_som[, .(ID, PT_ID, x = scale(x), y = scale(y), year, dur, start_month, 
+events_som_melt <- melt(events_som[, .(ID, PT_ID, year, dur, start_month, 
                                        start_p3_month, start_s_month, start_q_month,  p_dv_m, s_dv_m, q_dv_m, cluster)],
                         id.vars = c('ID', 'PT_ID', 'year','cluster'))
 
@@ -82,8 +80,8 @@ cluster_slope <- data.table(cluster_slope[, melt(slope)])
 colnames(cluster_slope) = c('slope', 'cluster')
 setorder(cluster_slope, slope)
 
-cl_inc <- cluster_slope[slope > 0.8, cluster] #change threshold to get most significant changes
-cl_dec <- cluster_slope[slope < -0.8, cluster]  #change threshold to get most significant changes
+cl_inc <- cluster_slope[slope > 0.06, cluster] #change threshold to get most significant changes
+cl_dec <- cluster_slope[slope < -0.06, cluster]  #change threshold to get most significant changes
 som_sum[cluster %in% cl_inc, .(cluster, dur, start_p3_month, start_s_month, start_q_month, p_dv_m, s_dv_m, q_dv_m, n_clusters)]
 som_sum[cluster %in% cl_dec, .(cluster, dur, start_p3_month, start_s_month, start_q_month, p_dv_m, s_dv_m, q_dv_m, n_clusters)]
 n_cls_yr[cluster %in% c(cl_inc, cl_dec), sum(N)]/n_cls_yr[, sum(N)]

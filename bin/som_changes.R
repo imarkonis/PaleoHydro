@@ -1,6 +1,6 @@
 ### Explore the changes in the clusters over 3 periods
 
-source('./source/functions.R'); source('./source/graphics.R'); 
+source('./source/functions.R'); source('./source/graphics.R')
 
 dta <- readRDS('./data/timeseries_met1.Rds')
 events <- readRDS('./data/events_met1.Rds')
@@ -36,7 +36,8 @@ to_plot <- timeseries_all[, .N, .(month = month(DTM),
                                   variable = factor(variable),
                                   region = REG)]
 to_plot[, mean_N := as.integer(mean(N)), .(period, variable, region)]
-
+to_plot$region = factor(to_plot$region, levels = c("NEU", "CEU", "MED"))
+                        
 gg_change <- ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   geom_point() + 
   geom_line() +
@@ -73,9 +74,9 @@ hcls_slopes_tab <- unique(events_som[, .(hclust, hcl_slope)])
 hcls_slopes_tab[hcl_slope < -0.05]
 hcls_slopes_tab[hcl_slope > 0.05]
 
-sig_clusters <- c('CEU_1', 'CEU_8', 'CEU_4', 
-  'MED_7', 'MED_3', 'MED_8', 
-  'NEU_3', 'NEU_6', 'NEU_2')
+sig_clusters <- c('NEU_3', 'NEU_6', 'NEU_2',
+                  'CEU_1', 'CEU_8', 'CEU_4', 
+  'MED_7', 'MED_3', 'MED_8')
 
 to_plot$cluster = factor(to_plot$cluster, levels = sig_clusters)
 
@@ -84,15 +85,15 @@ plot_labeller <- function(variable, value){
 }
 
 var_names <- list(
+  'NEU_3' = "Class A-NEU",
+  'NEU_6' = "Class B-NEU",
+  'NEU_2' = "Class C-NEU",
   'CEU_1' = "Class A-CEU",
   'CEU_8' = "Class B-CEU",
   'CEU_4' = "Class C-CEU",
   'MED_7' = "Class A-MED",
   'MED_3' = "Class B-MED",
-  'MED_8' = "Class C-MED",
-  'NEU_3' = "Class A-NEU",
-  'NEU_6' = "Class B-NEU",
-  'NEU_2' = "Class C-NEU")
+  'MED_8' = "Class C-MED")
 
 g1 <- ggplot(to_plot, aes(x = month, y = N, col = variable)) +
   geom_point() + 

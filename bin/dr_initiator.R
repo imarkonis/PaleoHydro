@@ -32,14 +32,14 @@ to_plot <- to_plot[complete.cases(to_plot)]
 g1 <- ggplot(to_plot, aes(decade, pvt_f, fill = init)) +
   geom_bar(position = 'fill', stat = 'identity') +
   scale_fill_manual(values = period_cols) +
-  labs(title = "CEU", x = "", y = "P vs T fraction") +
+  labs(title = "CEU", x = "", y = "") +
   geom_hline(yintercept = c(0.25, 0.5, 0.75), alpha = 0.2) + 
   guides(fill = guide_legend(title = "Initiated by:")) +
   theme_minimal() +
-  theme(panel.grid.major = element_blank(),
+  theme(plot.margin = margin(0.2, 0.2, 0.2, 0.8, "cm"),
+        panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), 
         axis.text.x = element_text(angle = 90, hjust = 1),
-        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
         plot.title = element_text(hjust = 0.5)) + 
   scale_x_discrete(expand = c(0, 0)) +
   coord_cartesian(xlim = c(0.45, 12.55), ylim = c(0.04, 1))
@@ -54,10 +54,10 @@ g1b <- ggplot(to_plot, aes(decade, s_dur_rel, col = init, fill = init)) +
   geom_smooth(alpha = 0.2) +
   scale_color_manual(values = period_cols) +
   scale_fill_manual(values = period_cols) +
-  labs(x = "Time (decade)", y = "SM drought fraction") +
+  labs(x = "Time (decade)", y = "") +
   theme_bw() +
   theme(legend.position = "none",
-        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
+        plot.margin = margin(0.2, 0.2, 0.2, 0.8, "cm"))
 
 #NEU
 
@@ -79,14 +79,14 @@ to_plot <- to_plot[complete.cases(to_plot)]
 g2 <- ggplot(to_plot, aes(decade, pvt_f, fill = init)) +
   geom_bar(position = 'fill', stat = 'identity') +
   scale_fill_manual(values = period_cols) +
-  labs(title = "NEU", x = "", y = "") +
+  labs(title = "NEU", x = "", y = "P vs T fraction") +
   geom_hline(yintercept = c(0.25, 0.5, 0.75), alpha = 0.2) + 
   guides(fill = guide_legend(title = "Initiated by:")) +
   theme_minimal() +
-  theme(plot.margin = margin(0.2, 0.2, 0.2, 0.8, "cm"),
-        panel.grid.major = element_blank(),
+  theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), 
         axis.text.x = element_text(angle = 90, hjust = 1),
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
         plot.title = element_text(hjust = 0.5)) + 
   scale_x_discrete(expand = c(0, 0)) +
   coord_cartesian(xlim = c(0.45, 12.55), ylim = c(0.04, 1))
@@ -101,11 +101,10 @@ g2b <- ggplot(to_plot, aes(decade, s_dur_rel, col = init, fill = init)) +
   geom_smooth(alpha = 0.2) +
   scale_color_manual(values = period_cols) +
   scale_fill_manual(values = period_cols) +
-  labs(x = "Time (decade)", y = "") +
+  labs(x = "Time (decade)", y = "SM drought fraction") +
   theme_bw() +
   theme(legend.position = "none",
-        plot.margin = margin(0.2, 0.2, 0.2, 0.8, "cm"))
-
+        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
 
 #MED
 
@@ -153,9 +152,9 @@ g3b <- ggplot(to_plot, aes(decade, s_dur_rel, col = init, fill = init)) +
   theme_bw() +
   theme(legend.position = "none",
         plot.margin = margin(0.2, 0.2, 0.2, 0.8, "cm"))
-
-gg_all <- ggarrange(g1, g3, g2,
-                    g1b, g3b, g2b,
+  
+gg_all <- ggarrange(g2, g1, g3, 
+                    g2b, g1b, g3b,
                     labels = c("a", "", '', 'b', '', ''),
                     common.legend = T, legend = 'right', 
                     nrow = 2, ncol = 3)
@@ -167,7 +166,7 @@ ggsave("./results/figs/summer_dr_pvt.png", width = 9, height = 5)
 #Plot per year
 
 fldr_init_yr <- events_som[!is.na(start_pet_month) & !is.na(start_p3_month), 
-                               .(pvt = start_p3 - start_pet, slope, year, REG)]
+                           .(pvt = start_p3 - start_pet, slope, year, REG)]
 
 to_plot <- fldr_init_yr[, .(mean_lag = mean(pvt)), .(slope, year, REG)] 
 ggplot(to_plot, aes(year, as.numeric(mean_lag), col = REG)) +
@@ -178,8 +177,8 @@ ggplot(to_plot, aes(year, as.numeric(mean_lag), col = REG)) +
 ## Hydrological vs Agricultural Drought
 
 ceu_fldr_qvs <- events_som[start_q != Inf & start_q != -Inf &
-                           start_s != Inf & start_s != -Inf &
-                           hclust == 'CEU_1', .(qvs = start_q - start_s, slope)]
+                             start_s != Inf & start_s != -Inf &
+                             hclust == 'CEU_1', .(qvs = start_q - start_s, slope)]
 
 ceu_fldr_qvs[, .(mean_lag = mean(qvs, na.rm = T)), slope] 
 ceu_fldr_qvs[qvs < 0, init := 'q']
