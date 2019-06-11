@@ -1,7 +1,7 @@
 source('./source/functions.R'); source('./source/graphics.R') 
 library(factoextra)
 
-load("./results/som/ceu/som_for_tree.Rdata")
+load("./results/som/som_start_end_5_10000_3.Rdata")
 
 
 # generate distance matrix for codes
