@@ -1,7 +1,6 @@
 source('./source/functions.R'); source('./source/graphics.R') 
 library(dplyr)
-
-load('./results/som/ceu/som_start_end_5_10000_3_events.Rdata')
+load('./results/som/neu/som_start_end_5_10000_3_events.Rdata')
 
 ###Cluster composition fraction per year
 cluster_comp <- events_som[, .(year, ID, cluster)]
@@ -12,7 +11,7 @@ setorder(cluster_comp, year, -N)
 cluster_comp[, fraction := cumsum(fraction), year]
 cluster_comp[, n_rank := rank(-N, ties.method = "first"), year]
 ggplot(cluster_comp, aes(factor(n_rank), y = fraction, group = n_rank)) +
-  geom_boxplot(fill = period_cols[c(rep(3, 3), rep(2, 3), rep(1, 18))]) +
+  geom_boxplot(fill = period_cols[c(rep(3, 3), rep(2, 3), rep(1, 19))]) +
   coord_cartesian(xlim = c(0, 10)) +
   labs(x = 'Rank', y = 'Cumulative fraction') +
   theme_bw()
@@ -37,31 +36,6 @@ ggplot(to_plot, aes(year, y = value, fill = variable)) +
   scale_fill_manual(values = period_cols)
 ggsave("./results/figs/som/composition_year.png", width = 8, height = 4)
 
-#Start-End-Duration
-to_plot <- events_som[, .(cluster, Start = start_month, End = end_month, Duration = dur)]
-to_plot <- melt(to_plot, id.vars = c("cluster"))
-
-ggplot(to_plot[value <= 12], aes(x = factor(cluster), fill = factor(value))) +
-  geom_bar(position = 'stack') +
-  geom_hline(yintercept = 4000, linetype = 2, col = 'grey40') +
-  geom_hline(yintercept = 3000, linetype = 2, col = 'grey40') +
-  geom_hline(yintercept = 2000, linetype = 2, col = 'grey40') +
-  geom_hline(yintercept = 1000, linetype = 2, col = 'grey40') +
-  scale_fill_manual(values = colset_mid[c(1:2, 4:5, 8:11, 6:7, 12, 3)]) +
-  coord_flip() +
-  theme_bw() +
-  guides(fill =guide_legend(title = "Month/Duration", ncol = 2)) +
-  labs(x = 'Node', y = 'Number of events') + 
-  theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), axis.ticks.x = element_blank(), 
-        axis.ticks.y = element_blank()) +
-  facet_wrap(~variable, ncol = 3) +
-  theme(strip.background = element_rect(fill = 'grey30', colour = 'grey30')) +
-  theme(strip.text = element_text(colour = 'grey80')) 
-ggsave("./results/figs/ceu_cls.png", plot = gg_start, height = 8, width = 14)
-
-
-
 #Start
 gg_start <- ggplot(events_som[n_clusters > 500], aes(x = factor(cluster), fill = factor(start_month))) +
   geom_bar(position = 'stack') +
@@ -72,14 +46,14 @@ gg_start <- ggplot(events_som[n_clusters > 500], aes(x = factor(cluster), fill =
   coord_flip() +
   theme_bw() +
   guides(fill =guide_legend(title = "Month", ncol = 2)) +
-  labs(x = 'Node', y = 'Number of events') + 
+  labs(x = 'Cluster', y = 'Size') + 
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.ticks.x = element_blank(), 
         axis.ticks.y = element_blank()) +
   facet_wrap(~period, ncol = 3) +
   theme(strip.background = element_rect(fill = 'grey30', colour = 'grey30')) +
   theme(strip.text = element_text(colour = 'grey80')) 
-ggsave("./results/figs/ceu_start_month_cls.png", plot = gg_start, height = 8, width = 14)
+ggsave(paste0(fig_path, fname, '_start_month_cls.png'), plot = gg_start, height = 8, width = 14)
 
 #End
 gg_end <- ggplot(events_som[n_clusters > 500], aes(x = factor(cluster), fill = factor(end_month))) +
@@ -91,14 +65,14 @@ gg_end <- ggplot(events_som[n_clusters > 500], aes(x = factor(cluster), fill = f
   coord_flip() +
   theme_bw() +
   guides(fill=guide_legend(title = "Month", ncol = 2)) +
-  labs(x = 'Node', y = 'Number of events') + 
+  labs(x = 'Cluster', y = 'Size') + 
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.ticks.x = element_blank(), 
         axis.ticks.y = element_blank()) +
   facet_wrap(~period, ncol = 3) +
   theme(strip.background = element_rect(fill = 'grey30', colour = 'grey30')) +
   theme(strip.text = element_text(colour = 'grey80')) 
-ggsave('./results/figs/ceu_end_month_cls.png', plot = gg_end, height = 8, width = 14)
+ggsave(paste0(fig_path, fname, '_end_month_cls.png'), plot = gg_end, height = 8, width = 14)
 
 ###Duration of annual droughts
 gg_dur_12 <- ggplot(events_som[n_clusters > 500 & dur <= 12], aes(x = factor(cluster), fill = factor(dur))) +
@@ -106,18 +80,18 @@ gg_dur_12 <- ggplot(events_som[n_clusters > 500 & dur <= 12], aes(x = factor(clu
   geom_hline(yintercept = 1500, linetype = 2, col = 'grey40') +
   geom_hline(yintercept = 1000, linetype = 2, col = 'grey40') +
   geom_hline(yintercept = 500, linetype = 2, col = 'grey40') +
-  scale_fill_manual(values = palette_mid(18)[9:18]) +
+  scale_fill_manual(values = palette_mid(36)) +
   coord_flip() +
   theme_bw() +
   guides(fill = guide_legend(title = "Duration", ncol = 2)) +
-  labs(x = 'Node', y = 'Number of events') + 
+  labs(x = 'Cluster', y = 'Size') + 
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.ticks.x = element_blank(), 
         axis.ticks.y = element_blank()) +
   facet_wrap(~period, ncol = 3) +
   theme(strip.background = element_rect(fill = 'grey30', colour = 'grey30')) +
   theme(strip.text = element_text(colour = 'grey80')) 
-ggsave(paste0('./results/figs/ceu_dur_12_cls.png'), plot = gg_dur_12, height = 8, width = 14)
+ggsave(paste0(fig_path, fname, '_dur_12_cls.png'), plot = gg_dur_12, height = 8, width = 14)
 
 ###Duration Categories
 gg_dur <- ggplot(events_som[n_clusters > 50], aes(x = factor(cluster), fill = factor(dur_cat))) +
