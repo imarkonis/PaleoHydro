@@ -77,8 +77,8 @@ saveRDS(dtm_short, './data/mstat_short_met1.rds') #short version of dtm [for eff
 
 dtb <- readRDS('./data/raw/rs_met_001.rds')
 dts_sp <- unique(dts[, 1:4])
-dtm_sp <- unique(dtm[, .(x, y, PT_ID)]) #here a prev. removed variable was called, I just moved the live below
-dtm_sp <- merge(dtm_sp, dts_sp, by = c('x', 'y'))
+dtm_sp <- unique(dtm[, .(x, y, REG, PT_ID)]) #here a prev. removed variable was called, I just moved the live below
+dtm_sp <- merge(dtm_sp, dts_sp, by = c('x', 'y', 'REG'))
 
 rm(dtm, dtm_short)
 
